@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍱 Digital Canteen
 
-## Getting Started
+Welcome to the **Digital Canteen**! This is a premium, full-stack web application built to modernize cafeteria and canteen ordering systems. Featuring a stunning Glassmorphism UI, real-time order tracking, comprehensive admin controls, and Google OAuth integration.
 
-First, run the development server:
+---
 
+## ✨ Features
+
+### 🍔 For Users
+* **Dynamic Menu & Cart:** Browse categorized menus (Breakfast, Lunch, Snacks, Dinner) with quick "Add to Cart" functionality.
+* **Your Plate Builder:** Custom-build your meals (e.g., Rice + 2 Curries + Sweet) with enforced selection limits.
+* **Smart Meal Timings:** The cart automatically strictly enforces meal timing rules (e.g., preventing checkout of Lunch items during Breakfast hours), while still allowing seamless browsing.
+* **Live Order Tracking:** See your order move from "Pending" ➡️ "Cooking" ➡️ "Ready!" right from your dashboard.
+* **Complaints Portal:** Easily submit issues with photo attachments and receive direct admin replies.
+* **Google OAuth:** Secure, one-click login using Google accounts.
+
+### 🛡️ For Admins (Management Portal)
+* **Live Kanban Board:** Manage incoming orders in real-time. Move cards through stages with a single click.
+* **Inventory & Menu Control:** Instantly toggle item availability, update pricing, and manage stock thresholds.
+* **Dynamic Hero Banners:** Update the user home page banners instantly via a built-in CMS.
+* **Meal Timing Overrides:** Set automated schedules for meals or manually force a category open/closed during emergencies.
+* **Revenue Analytics:** Track daily revenue, total orders, and popular items via the Analytics Dashboard.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Frontend:** [Next.js 14](https://nextjs.org/) (App Router), React, Vanilla CSS (Custom Glassmorphism Design System)
+* **Backend:** Next.js Server Actions & API Routes
+* **Database:** SQLite managed via [Prisma ORM](https://www.prisma.io/)
+* **Authentication:** [NextAuth.js](https://next-auth.js.org/) (Google Provider + Credentials)
+
+---
+
+## 🚀 Getting Started
+
+Follow these steps to run the Digital Canteen locally on your machine.
+
+### 1. Clone the Repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/induririsheendra-cmd/Digital-Canteen.git
+cd Digital-Canteen
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment Variables
+Create a `.env` file in the root directory and add your Google OAuth credentials and a standard Auth Secret:
+```env
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your_super_secret_string_here"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Get these from the Google Cloud Console
+GOOGLE_CLIENT_ID="your_google_client_id"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+```
 
-## Learn More
+### 4. Database Setup & Seeding
+Push the Prisma schema to your local SQLite database and populate it with initial menu items:
+```bash
+npx prisma db push
+npx prisma db seed
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 5. Start the Development Server
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 👤 Test Accounts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you prefer to test via standard login instead of Google OAuth, the database is seeded with two default accounts:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Standard User:**
+* **Username:** `test_user`
+* **Password:** `password123`
+
+**Admin User (Full Access):**
+* **Username:** `test_admin`
+* **Password:** `password123`
+
+---
+
+*Designed and Built for the Future of Campus Dining.*

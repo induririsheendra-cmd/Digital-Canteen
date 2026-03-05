@@ -1,48 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap');
-
+/* [project]/untitled folder 3/Digital Canteen/src/app/globals.css [app-client] (css) */
 :root {
   --bg-gradient-start: #0f172a;
   --bg-gradient-end: #020617;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-
   --accent-primary: #6366f1;
   --accent-secondary: #8b5cf6;
   --accent-hover: #4f46e5;
-
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-bg: #ffffff08;
+  --glass-border: #ffffff14;
+  --glass-shadow: 0 8px 32px 0 #0000005e;
   --backdrop-blur: 16px;
-
-  --card-bg: rgba(15, 23, 42, 0.6);
-  --input-bg: rgba(255, 255, 255, 0.05);
+  --card-bg: #0f172a99;
+  --input-bg: #ffffff0d;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
   color: var(--text-primary);
   min-height: 100vh;
   margin: 0;
+  font-family: Inter, sans-serif;
   overflow-x: hidden;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: 'Outfit', sans-serif;
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: .5rem;
+  font-family: Outfit, sans-serif;
   font-weight: 600;
-  margin-bottom: 0.5rem;
 }
 
 a {
@@ -50,18 +41,15 @@ a {
   text-decoration: none;
 }
 
-/* Typography Utilities */
 .text-gradient {
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
   background-clip: text;
 }
 
-/* Glassmorphism Utilities */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--backdrop-blur));
   -webkit-backdrop-filter: blur(var(--backdrop-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
@@ -69,43 +57,43 @@ a {
 }
 
 .glass-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
   background: var(--input-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  width: 100%;
   color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  border-radius: 8px;
   outline: none;
+  padding: .75rem 1rem;
+  font-family: Inter, sans-serif;
+  font-size: 1rem;
+  transition: all .3s;
 }
 
 .glass-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-  background: rgba(255, 255, 255, 0.08);
+  background: #ffffff14;
+  box-shadow: 0 0 0 2px #6366f133;
 }
 
 .glass-button {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-  color: white;
+  color: #fff;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: .05em;
   border: none;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
+  width: 100%;
+  padding: .75rem 1.5rem;
+  font-family: Inter, sans-serif;
   font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  transition: all .3s;
 }
 
 .glass-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px #6366f166;
 }
 
 .glass-button:active {
@@ -113,17 +101,16 @@ a {
 }
 
 .secondary-button {
-  background: transparent;
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
+  background: none;
 }
 
 .secondary-button:hover {
-  background: rgba(255, 255, 255, 0.05);
   box-shadow: none;
+  background: #ffffff0d;
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -137,5 +124,7 @@ a {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: .5s ease-out forwards fadeIn;
 }
+
+/*# sourceMappingURL=untitled%20folder%203_Digital%20Canteen_src_app_globals_css_bad6b30c._.single.css.map*/

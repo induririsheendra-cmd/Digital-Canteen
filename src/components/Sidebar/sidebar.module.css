@@ -1,0 +1,143 @@
+.sidebar {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    z-index: 50;
+}
+
+.logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 2.5rem;
+    padding: 0 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-grow: 1;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.navItem svg {
+    width: 20px;
+    height: 20px;
+}
+
+.navItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.navItem.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-primary);
+    border-right: 3px solid var(--accent-primary);
+}
+
+.badge {
+    background: var(--accent-primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 12px;
+    margin-left: auto;
+}
+
+.divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+    width: 100%;
+}
+
+.bottomNav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: #ef4444;
+    background: transparent;
+    border: none;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.logoutBtn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Collapsible Sidebar Styles */
+.sidebar {
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 80px;
+    align-items: center;
+}
+
+.sidebar.collapsed .logo span {
+    display: none;
+}
+
+.sidebar.collapsed .navItem span,
+.sidebar.collapsed .logoutBtn span {
+    display: none;
+}
+
+.sidebar.collapsed .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    margin: 0;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.65rem;
+}
+
+.sidebar.collapsed .navItem {
+    justify-content: center;
+    padding: 0.75rem;
+    position: relative;
+}
+
+.sidebar.collapsed .logoutBtn {
+    justify-content: center;
+    padding: 0.75rem;
+}

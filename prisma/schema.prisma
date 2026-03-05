@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  username   String?  @unique
+  name       String?  // Phase 7: Display Name
+  email      String?  @unique
+  password   String?
+  role       String   @default("USER") // 'USER' | 'ADMIN'
+  rollNumber String?
+  semester   String?
+  department String?
+  orders     Order[]
+  complaints Complaint[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MenuItem {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  price             Float
+  imageUrl          String
+  category          String   @default("General")
+  isVeg             Boolean  @default(true)
+  available         Boolean  @default(true)
+  stock             Int      @default(100)
+  lowStockThreshold Int      @default(10)
+  orderItems        OrderItem[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Float
+  status      String      @default("PENDING") // 'PENDING' | 'COOKING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+  notes       String?
+  rating      Int?        // Phase 7: Order Rating (1-5)
+  review      String?     // Phase 7: Order Review
+  complaints  Complaint[]
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId  String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity    Int
+  priceAtTime Float
+}
+
+model BannerSettings {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float?
+  imageUrl    String
+  menuItemId  String?  // Phase 8: Link banner to a specific food item
+  updatedAt   DateTime @updatedAt
+}
+
+// Phase 8 Models
+model MealTiming {
+  id           String   @id @default(cuid())
+  category     String   @unique // BREAKFAST, LUNCH, SNACKS, DINNER
+  startTime    String   // "08:00"
+  endTime      String   // "11:00"
+  isManualOpen Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+}
+
+model Complaint {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [id])
+  image      String?  // Base64 or URL
+  text       String
+  status     String   @default("PENDING") // PENDING, RESOLVED
+  adminReply String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?  // Null if Global Broadcast
+  message   String
+  type      String   // ORDER, COMPLAINT, STOCK, GLOBAL
+  read      Boolean  @default(false)
+  link      String?  // e.g., "/orders" or "/complaints"
+  createdAt DateTime @default(now())
+}
+
+model ItemSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  menuItemId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, menuItemId])
+}
+
+model ReviewVote {
+  id      String @id @default(cuid())
+  userId  String
+  orderId String
+  vote    String // "LIKE" or "DISLIKE"
+
+  @@unique([userId, orderId])
+}

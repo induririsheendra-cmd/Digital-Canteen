@@ -6,13 +6,14 @@ import bcrypt from 'bcryptjs';
 export async function PATCH(request: Request) {
     try {
         const session = await auth();
+        const userId = session?.user?.id;
 
-        if (!session?.user?.email) {
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
-        const { username, name, rollNumber, semester, department, password } = body;
+        const { username, name, email, rollNumber, semester, department, password } = body;
 
         if (!username) {
             return NextResponse.json({ error: 'Username is required' }, { status: 400 });
@@ -21,6 +22,7 @@ export async function PATCH(request: Request) {
         const updateData: any = {
             username,
             name,
+            email,
             rollNumber,
             semester,
             department
@@ -33,7 +35,7 @@ export async function PATCH(request: Request) {
         }
 
         const updatedUser = await prisma.user.update({
-            where: { email: session.user.email },
+            where: { id: userId },
             data: updateData,
             select: {
                 id: true,

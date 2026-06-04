@@ -11,7 +11,7 @@ export default async function ComplaintsPage() {
     const session = await auth();
 
     if (!session?.user?.id) {
-        redirect('/login');
+        redirect('/?login=true');
     }
 
     // Fetch the user's past 10 orders so they can optionally link a complaint to an order ID

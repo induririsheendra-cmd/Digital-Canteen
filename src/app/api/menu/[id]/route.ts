@@ -57,6 +57,17 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Check if there are any associated order items
+        const orderCount = await prisma.orderItem.count({
+            where: { menuItemId: id }
+        });
+
+        if (orderCount > 0) {
+            return NextResponse.json({ 
+                error: "Cannot delete item with order history. Use the 'Available' toggle in the menu board to hide it from customers instead." 
+            }, { status: 400 });
+        }
+
         await prisma.menuItem.delete({
             where: { id }
         });
@@ -65,6 +76,6 @@ export async function DELETE(
 
     } catch (error) {
         console.error("Menu Item Delete Error:", error);
-        return NextResponse.json({ error: "Failed to delete menu item" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to delete menu item. It might be linked to other records." }, { status: 500 });
     }
 }

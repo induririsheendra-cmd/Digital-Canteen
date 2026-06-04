@@ -8,15 +8,16 @@ import { redirect } from "next/navigation";
 export default async function OrdersPage({
     searchParams,
 }: {
-    searchParams: { success?: string };
+    searchParams: Promise<{ success?: string }>;
 }) {
+    const params = await searchParams;
     const session = await auth();
 
     if (!session?.user?.id) {
-        redirect("/login");
+        redirect("/?login=true");
     }
 
-    const showSuccess = searchParams.success === "true";
+    const showSuccess = params.success === "true";
 
     // Fetch user's orders
     const orders = await prisma.order.findMany({

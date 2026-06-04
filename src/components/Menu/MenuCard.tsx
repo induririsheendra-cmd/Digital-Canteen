@@ -135,14 +135,29 @@ export default function MenuCard({ item }: MenuCardProps) {
                 {item.description && <p className={styles.description}>{item.description}</p>}
 
                 <div className={styles.cardFooter}>
-                    <span className={styles.price}>₹{item.price}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span className={styles.price}>₹{item.price}</span>
+                      {item.stock <= 10 && item.stock > 0 && (
+                        <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 600 }}>
+                          Only {item.stock} left!
+                        </span>
+                      )}
+                      {item.stock > 10 && (
+                         <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                           Stock: {item.stock}
+                         </span>
+                      )}
+                    </div>
                     <button
                         className={`glass-button ${styles.addBtn} ${qty > 0 ? styles.activeAdd : ""}`}
                         onClick={handleAdd}
-                        disabled={item.stock === 0 || !item.available}
-                        style={{ opacity: (item.stock === 0 || !item.available) ? 0.5 : 1, cursor: (item.stock === 0 || !item.available) ? 'not-allowed' : 'pointer' }}
+                        disabled={item.stock === 0 || !item.available || (qty >= item.stock)}
+                        style={{ 
+                          opacity: (item.stock === 0 || !item.available || (qty >= item.stock)) ? 0.5 : 1, 
+                          cursor: (item.stock === 0 || !item.available || (qty >= item.stock)) ? 'not-allowed' : 'pointer' 
+                        }}
                     >
-                        {item.stock === 0 || !item.available ? 'Out of Stock' : qty > 0 ? `Added (${qty})` : (
+                        {item.stock === 0 || !item.available ? 'Out of Stock' : (qty >= item.stock) ? 'Max Limit' : qty > 0 ? `Added (${qty})` : (
                             <>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                 Add

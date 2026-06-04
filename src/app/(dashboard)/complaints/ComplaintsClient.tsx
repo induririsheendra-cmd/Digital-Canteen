@@ -207,6 +207,13 @@ export default function ComplaintsClient({ recentOrders, pastComplaints }: { rec
                                     "{complaint.text}"
                                 </p>
 
+                                {complaint.image && (
+                                    <div style={{ marginTop: '0.5rem', maxWidth: '250px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={complaint.image} alt="Complaint evidence" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                                    </div>
+                                )}
+
                                 {complaint.adminReply && (
                                     <div style={{
                                         marginTop: '0.5rem',

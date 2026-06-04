@@ -8,7 +8,8 @@ async function main() {
 
   // 1. Users
   const studentPassword = await bcrypt.hash('password123', 10);
-  const adminPassword = await bcrypt.hash('adminpassword123', 10);
+  const adminPassword = await bcrypt.hash('1234567890', 10);
+  const userAdminPassword = await bcrypt.hash('password123', 10); // Default password for the specific user
 
   // Clear existing items to prevent duplicates and constraint errors
   await prisma.orderItem.deleteMany({});
@@ -21,7 +22,7 @@ async function main() {
 
   // Clear existing users safely before reseeding to prevent email collisions
   await prisma.user.deleteMany({
-    where: { email: { in: ['student1@university.edu', 'admin@university.edu'] } }
+    where: { email: { in: ['student1@university.edu', 'admin@university.edu', 'induririsheendra@gmail.com'] } }
   });
 
   const student = await prisma.user.create({
@@ -38,6 +39,15 @@ async function main() {
       username: 'admin1',
       email: 'admin@university.edu',
       password: adminPassword,
+      role: 'ADMIN',
+    },
+  });
+
+  const userAdmin = await prisma.user.create({
+    data: {
+      username: 'induririsheendra-cmd',
+      email: 'induririsheendra@gmail.com',
+      password: userAdminPassword,
       role: 'ADMIN',
     },
   });

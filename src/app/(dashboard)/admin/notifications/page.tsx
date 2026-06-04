@@ -11,8 +11,8 @@ export default async function AdminNotificationsPage() {
     const session = await auth();
     const user = session?.user as any;
 
-    if (!session || user?.role !== 'ADMIN') {
-        redirect('/login');
+    if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
+        redirect('/?login=true');
     }
 
     // Fetch history of global broadcasts

@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import styles from './sidebar.module.css';
 
 export default function Sidebar() {
+    const { data: session, status } = useSession();
     const pathname = usePathname();
     const { cartItems } = useCart();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [unreadOrders, setUnreadOrders] = useState(0);
+
+    const isAuthenticated = status === 'authenticated';
 
     useEffect(() => {
         document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '80px' : '250px');
@@ -45,7 +48,8 @@ export default function Sidebar() {
             onDoubleClick={() => setIsCollapsed(!isCollapsed)}
         >
             <div className={styles.logo}>
-                <span className="text-gradient">Food Lite</span>
+                <span className={`text-gradient ${styles.fullLogo}`}>🍽 Digital Canteen</span>
+                <span className={`text-gradient ${styles.collapsedLogo}`}>DC</span>
             </div>
 
             <nav className={styles.nav}>
@@ -78,24 +82,28 @@ export default function Sidebar() {
                     <span>Cart</span>
                     {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
                 </Link>
-                <Link
-                    href="/orders"
-                    className={`${styles.navItem} ${pathname === '/orders' ? styles.active : ''}`}
-                    onClick={() => setUnreadOrders(0)} // Clear badge on view
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    <span>Order History</span>
-                    {unreadOrders > 0 && <span className={styles.badge} style={{ background: '#ef4444' }}>{unreadOrders}</span>}
-                </Link>
+                {isAuthenticated && (
+                    <>
+                        <Link
+                            href="/orders"
+                            className={`${styles.navItem} ${pathname === '/orders' ? styles.active : ''}`}
+                            onClick={() => setUnreadOrders(0)} // Clear badge on view
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                            <span>Order History</span>
+                            {unreadOrders > 0 && <span className={styles.badge} style={{ background: '#ef4444' }}>{unreadOrders}</span>}
+                        </Link>
 
-                <Link
-                    href="/complaints"
-                    className={`${styles.navItem} ${pathname === '/complaints' ? styles.active : ''}`}
-                    style={{ color: '#f59e0b' }}
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                    <span>Help & Support</span>
-                </Link>
+                        <Link
+                            href="/complaints"
+                            className={`${styles.navItem} ${pathname === '/complaints' ? styles.active : ''}`}
+                            style={{ color: '#f59e0b' }}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                            <span>Help & Support</span>
+                        </Link>
+                    </>
+                )}
 
             </nav>
 
@@ -107,7 +115,7 @@ export default function Sidebar() {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
                     <span>User Settings</span>
                 </Link>
-                <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: '/login' })}>
+                <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: '/' })}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
                     <span>Logout</span>
                 </button>

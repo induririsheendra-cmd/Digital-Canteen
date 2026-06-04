@@ -42,7 +42,7 @@ export default function NotificationBell() {
         if (pathname === '/login' || pathname === '/register') return;
 
         fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 30000); // Check every 30 seconds
+        const intervalId = setInterval(fetchNotifications, 10000); // Check every 10 seconds
         return () => clearInterval(intervalId);
     }, [pathname]);
 

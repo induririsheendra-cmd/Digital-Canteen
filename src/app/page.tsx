@@ -1,16 +1,18 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import LandingPage from './LandingPage';
 
 export default async function RootPage() {
   const session = await auth();
 
   if (!session) {
-    redirect('/login');
+    // Show landing page for unauthenticated visitors
+    return <LandingPage />;
   }
 
-  // Redirect based on role if needed, otherwise default to /home
+  // Redirect authenticated users to their dashboard
   if ((session?.user as any)?.role === 'ADMIN') {
-    redirect('/admin/dashboard');
+    redirect('/admin');
   }
 
   redirect('/home');

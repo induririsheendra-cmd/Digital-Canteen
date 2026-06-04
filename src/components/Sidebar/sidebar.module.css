@@ -8,15 +8,37 @@
     flex-direction: column;
     padding: 1.5rem 1rem;
     z-index: 50;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 
 .logo {
     font-family: 'Outfit', sans-serif;
-    font-size: 1.75rem;
+    font-size: 1.25rem;
     font-weight: 800;
     margin-bottom: 2.5rem;
     padding: 0 0.5rem;
     letter-spacing: 0.05em;
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fullLogo {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.collapsedLogo {
+    display: none;
+    font-size: 1.75rem;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    opacity: 0;
+    transform: scale(0.5);
 }
 
 .nav {
@@ -34,12 +56,18 @@
     border-radius: 8px;
     color: var(--text-secondary);
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease,
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                justify-content 0.35s ease;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .navItem svg {
     width: 20px;
     height: 20px;
+    min-width: 20px;
+    transition: transform 0.25s ease;
 }
 
 .navItem:hover {
@@ -47,10 +75,20 @@
     color: var(--text-primary);
 }
 
+.navItem:hover svg {
+    transform: scale(1.1);
+}
+
 .navItem.active {
     background: rgba(99, 102, 241, 0.1);
     color: var(--accent-primary);
     border-right: 3px solid var(--accent-primary);
+}
+
+.navItem span {
+    transition: opacity 0.2s ease, width 0.3s ease;
+    opacity: 1;
+    overflow: hidden;
 }
 
 .badge {
@@ -61,6 +99,7 @@
     padding: 0.1rem 0.5rem;
     border-radius: 12px;
     margin-left: auto;
+    transition: all 0.25s ease;
 }
 
 .divider {
@@ -91,7 +130,10 @@
     font-family: 'Inter', sans-serif;
     cursor: pointer;
     text-align: left;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease,
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .logoutBtn:hover {
@@ -101,25 +143,38 @@
 .logoutBtn svg {
     width: 20px;
     height: 20px;
+    min-width: 20px;
 }
 
-/* Collapsible Sidebar Styles */
-.sidebar {
-    transition: width 0.3s ease;
+.logoutBtn span {
+    transition: opacity 0.2s ease;
+    opacity: 1;
 }
 
+/* ========== COLLAPSED STATE ========== */
 .sidebar.collapsed {
     width: 80px;
     align-items: center;
+    padding: 1.5rem 0.5rem;
 }
 
-.sidebar.collapsed .logo span {
+.sidebar.collapsed .fullLogo {
     display: none;
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.sidebar.collapsed .collapsedLogo {
+    display: block;
+    opacity: 1;
+    transform: scale(1);
 }
 
 .sidebar.collapsed .navItem span,
 .sidebar.collapsed .logoutBtn span {
-    display: none;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
 }
 
 .sidebar.collapsed .badge {

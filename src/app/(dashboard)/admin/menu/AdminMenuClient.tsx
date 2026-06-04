@@ -10,6 +10,12 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
     const [activeCategory, setActiveCategory] = useState<string>("BEVERAGES");
     const [dietFilter, setDietFilter] = useState<"ALL" | "VEG" | "NON_VEG">("ALL");
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     // Modal State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -56,7 +62,7 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
 
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.price || !newItem.imageUrl) {
-            alert("Please fill in Name, Price, and Image URL.");
+            showToast("Please fill in Name, Price, and Image URL.", "error");
             return;
         }
 
@@ -84,10 +90,10 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
 
             if (editingItemId) {
                 setItems(prev => prev.map(item => item.id === editingItemId ? { ...item, ...menuItem } : item));
-                alert("Item updated successfully!");
+                showToast("Item updated successfully!");
             } else {
                 setItems([menuItem, ...items]);
-                alert("Item added successfully!");
+                showToast("Item added successfully!");
             }
 
             // Reset state
@@ -105,7 +111,7 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
             setImageSearchQuery("");
         } catch (error) {
             console.error(error);
-            alert(`Failed to ${editingItemId ? 'update' : 'add'} menu item.`);
+            showToast(`Failed to ${editingItemId ? 'update' : 'add'} item.`, "error");
         } finally {
             setIsSaving(false);
         }
@@ -120,12 +126,16 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                 method: "DELETE"
             });
 
-            if (!res.ok) throw new Error("Failed to delete item");
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || "Failed to delete item");
+            }
 
             setItems(prev => prev.filter(item => item.id !== id));
-        } catch (error) {
+            showToast("Item deleted successfully!");
+        } catch (error: any) {
             console.error(error);
-            alert("Failed to delete menu item.");
+            showToast(error.message || "Failed to delete item.", "error");
         } finally {
             setIsUpdating(null);
         }
@@ -151,7 +161,7 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
 
         } catch (error) {
             console.error(error);
-            alert(`Failed to update ${field}. Please try again.`);
+            showToast(`Failed to update ${field}.`, "error");
         } finally {
             setIsUpdating(null);
         }
@@ -552,6 +562,32 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                     </div>
                 </div>
             )}
+
+            {/* Local Action Toast */}
+            {toast && (
+                <div style={{
+                    position: 'fixed', bottom: '30px', right: '30px',
+                    background: toast.type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(16, 185, 129, 0.9)',
+                    border: `1px solid ${toast.type === 'error' ? '#ef4444' : '#10b981'}`,
+                    color: 'white', padding: '1rem 1.5rem', borderRadius: '12px',
+                    backdropFilter: 'blur(10px)', boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                    zIndex: 10000, display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    animation: 'slideInRight 0.3s ease-out'
+                }}>
+                    {toast.type === 'error' ? (
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    ) : (
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{toast.message}</span>
+                </div>
+            )}
+            <style jsx>{`
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 }

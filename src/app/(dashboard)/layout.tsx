@@ -1,6 +1,7 @@
 import UserSidebar from '@/components/Sidebar/UserSidebar';
 import AdminSidebar from '@/components/Sidebar/AdminSidebar';
 import OrderNotifier from '@/components/Header/OrderNotifier';
+import AdminToastNotifier from '@/components/Header/AdminToastNotifier';
 import NotificationBell from '@/components/Header/NotificationBell';
 import CartBadge from '@/components/Header/CartBadge';
 import { CartProvider } from '@/context/CartContext';
@@ -17,8 +18,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className={styles.layout}>
                 {isAdmin ? <AdminSidebar /> : <UserSidebar />}
 
-                {/* Global Toast Notifier for Customers */}
+                {/* Global Toast Notifiers */}
                 {!isAdmin && <OrderNotifier />}
+                {isAdmin && <AdminToastNotifier />}
 
                 <main className={styles.main}>
                     <div style={{ position: 'absolute', top: '1.5rem', right: '2rem', zIndex: 1000, display: 'flex', gap: '1.5rem', alignItems: 'center' }}>

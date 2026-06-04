@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import MenuCard from '@/components/Menu/MenuCard';
 import HomeBannerClient from './HomeBannerClient';
+import HomeMenuClient from './HomeMenuClient';
 import styles from './home.module.css';
 
 export default async function HomePage() {
@@ -68,7 +69,7 @@ export default async function HomePage() {
     if (banners.length === 0) {
         banners = [{
             id: '1',
-            title: 'Welcome to Food Lite',
+            title: 'Welcome to Digital Canteen',
             description: 'Experience the best meals right to your desk.',
             price: null,
             imageUrl: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=2000',
@@ -99,23 +100,7 @@ export default async function HomePage() {
 
             <HomeBannerClient bannersData={bannersWithItems as any} />
 
-            <section className={styles.menuSection}>
-                <div className={styles.sectionHeader}>
-                    <h3>Canteen Menu</h3>
-                    <div className={styles.filters}>
-                        <button className={`${styles.filterBtn} ${styles.active}`}>All</button>
-                        <button className={styles.filterBtn}>Main Course</button>
-                        <button className={styles.filterBtn}>Snacks</button>
-                        <button className={styles.filterBtn}>Beverages</button>
-                    </div>
-                </div>
-
-                <div className={styles.menuGrid}>
-                    {enrichedItems.map(item => (
-                        <MenuCard key={item.id} item={item as any} />
-                    ))}
-                </div>
-            </section>
+            <HomeMenuClient items={enrichedItems as any} />
         </div>
     );
 }

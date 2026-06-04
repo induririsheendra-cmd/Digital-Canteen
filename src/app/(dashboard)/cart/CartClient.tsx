@@ -3,19 +3,25 @@
 import { useCart } from "@/context/CartContext";
 import styles from "./cart.module.css";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import Script from "next/script";
 
 interface CartClientProps {
     mealTimings?: any[];
 }
-
 export default function CartClient({ mealTimings = [] }: CartClientProps) {
+    const { data: session, status } = useSession();
     const { cartItems, updateQuantity, removeFromCart, clearCart, cartTotal } = useCart();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
 
     // Phase 6 Custom Notes
     const [orderNotes, setOrderNotes] = useState("");
+
+    // Razorpay Integration State
+    const [isRazorpayLoading, setIsRazorpayLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const isCategoryOpen = (catId: string) => {
         const timing = mealTimings.find(t => t.category === catId);
@@ -42,36 +48,102 @@ export default function CartClient({ mealTimings = [] }: CartClientProps) {
     const grandTotal = openSubtotal + tax;
 
     const handleCheckout = async () => {
+        if (status !== 'authenticated') {
+            alert("please sign in to continue");
+            router.push('/?login=true');
+            return;
+        }
+
         if (openItems.length === 0) {
             alert("There are no available items in your cart to checkout.");
             return;
         }
 
         setIsProcessing(true);
+        setErrorMessage("");
 
         try {
-            const res = await fetch('/api/orders', {
+            // 1. Create order on server to get Razorpay orderId
+            const res = await fetch('/api/payment/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cartItems: openItems,
-                    totalAmount: grandTotal,
-                    notes: orderNotes.trim() || null
-                })
+                body: JSON.stringify({ amount: grandTotal })
             });
 
-            if (!res.ok) throw new Error('Checkout failed');
+            if (!res.ok) throw new Error("Failed to initialize payment");
+            const { orderId, amount, currency } = await res.json();
 
-            // Remove only the items that were successfully ordered
-            openItems.forEach(item => removeFromCart(item.id));
+            // 2. Open Razorpay Checktout
+            const options = {
+                key: "rzp_test_RzPiEJMztI2gKp", // Public key from user
+                amount: amount,
+                currency: currency,
+                name: "Digital Canteen",
+                description: "Campus Food Ordering",
+                image: "https://cdn-icons-png.flaticon.com/512/3655/3655682.png", // Generic food icon
+                order_id: orderId,
+                handler: async function (response: any) {
+                    // 3. Verify payment on server
+                    const verifyRes = await fetch('/api/payment/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
 
-            router.push('/orders');
-        } catch (error) {
-            console.error(error);
-            alert("Checkout failed. Please try again.");
+                    const verifyData = await verifyRes.json();
+                    if (verifyData.verified) {
+                        // 4. Create final canteen order
+                        const orderRes = await fetch('/api/orders', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                cartItems: openItems,
+                                totalAmount: grandTotal,
+                                notes: orderNotes.trim() || null,
+                                paymentId: response.razorpay_payment_id,
+                            })
+                        });
+
+                        if (orderRes.ok) {
+                            openItems.forEach(item => removeFromCart(item.id));
+                            router.push('/orders');
+                        } else {
+                            const err = await orderRes.json();
+                            alert("Payment successful, but order creation failed: " + (err.error || "Unknown error"));
+                        }
+                    } else {
+                        alert("Payment verification failed. Please contact support.");
+                    }
+                },
+                prefill: {
+                    name: "", // Could be filled from session
+                    email: "",
+                },
+                theme: {
+                    color: "#6366f1",
+                },
+                modal: {
+                    ondismiss: function() {
+                        setIsProcessing(false);
+                    }
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+
+        } catch (err: any) {
+            console.error(err);
+            alert(err.message || "Something went wrong. Please try again.");
             setIsProcessing(false);
         }
     };
+
+
 
     if (cartItems.length === 0) {
         return (
@@ -188,15 +260,28 @@ export default function CartClient({ mealTimings = [] }: CartClientProps) {
                         disabled={isProcessing || openItems.length === 0}
                         style={{ width: '100%' }}
                     >
-                        {isProcessing ? 'Processing...' : hasClosedItems ? 'Checkout Available Items Only' : (
+                        {isProcessing ? 'Processing...' : hasClosedItems ? 'Pay for Available Items Only' : (
                             <>
-                                Proceed to Checkout
+                                Pay ₹{grandTotal.toFixed(2)}
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px', marginLeft: '0.5rem' }}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                             </>
                         )}
                     </button>
+
+                    {/* Payment Methods Preview */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Pay via</span>
+                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>📱 UPI</span>
+                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>💳 Card</span>
+                        <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>🏦 Bank</span>
+                    </div>
                 </section>
             </div>
+
+            <Script
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                onLoad={() => console.log("Razorpay SDK loaded")}
+            />
         </div>
     );
 }

@@ -69,8 +69,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const existingItemIndex = prev.findIndex((item) => item.menuItem.id === menuItem.id);
             if (existingItemIndex > -1) {
                 const updatedCart = [...prev];
+                const currentQty = updatedCart[existingItemIndex].quantity;
+
+                // Stock check
+                if (currentQty >= menuItem.stock) {
+                    alert(`Sorry, only ${menuItem.stock} ${menuItem.name}(s) available.`);
+                    return prev;
+                }
+
                 updatedCart[existingItemIndex].quantity += 1;
                 return updatedCart;
+            }
+
+            // Check stock for new item
+            if (menuItem.stock <= 0) {
+                alert(`Sorry, ${menuItem.name} is currently out of stock.`);
+                return prev;
             }
 
             // Add new item
@@ -94,6 +108,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
             prev.map((item) => {
                 if (item.id === cartItemId) {
                     const newQuantity = item.quantity + change;
+
+                    // Stock check on increment
+                    if (change > 0 && newQuantity > item.menuItem.stock) {
+                        alert(`Sorry, only ${item.menuItem.stock} ${item.menuItem.name}(s) available.`);
+                        return item;
+                    }
+
                     return { ...item, quantity: newQuantity > 0 ? newQuantity : 1 }; // Prevent <= 0
                 }
                 return item;

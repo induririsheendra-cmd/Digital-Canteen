@@ -15,6 +15,7 @@ export default function SettingsClient({ user }: { user: User }) {
     const [formData, setFormData] = useState({
         name: user.name || '',
         username: user.username || '',
+        email: user.email || '',
         rollNumber: user.rollNumber || '',
         semester: user.semester || '',
         department: user.department || '',
@@ -84,6 +85,9 @@ export default function SettingsClient({ user }: { user: User }) {
                             placeholder="e.g. John Doe"
                         />
                     </div>
+                </div>
+
+                <div className={styles.row}>
                     <div className={styles.inputGroup}>
                         <label>Username</label>
                         <input
@@ -93,6 +97,18 @@ export default function SettingsClient({ user }: { user: User }) {
                             onChange={handleChange}
                             className={styles.input}
                             required
+                        />
+                    </div>
+                    <div className={styles.inputGroup}>
+                        <label>Email Address</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className={styles.input}
+                            required
+                            placeholder="e.g. john@example.com"
                         />
                     </div>
                 </div>

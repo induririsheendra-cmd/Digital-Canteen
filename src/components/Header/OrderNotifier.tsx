@@ -4,28 +4,38 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function OrderNotifier() {
-    const [notification, setNotification] = useState<{ id: string, message: string } | null>(null);
+    const [notification, setNotification] = useState<{ id: string, message: string, status: string } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
-        // Poll every 15 seconds for newly completed orders
+        // Poll every 10 seconds for newly updated, unnotified orders
         const interval = setInterval(async () => {
             try {
                 const res = await fetch('/api/orders/polling');
                 if (res.ok) {
                     const data = await res.json();
                     if (data.newOrders && data.newOrders.length > 0) {
-                        // Just show the first one
-                        setNotification({
-                            id: data.newOrders[0].id,
-                            message: `Order #${data.newOrders[0].id.slice(-6).toUpperCase()} is ready for pickup!`
-                        });
+                        const order = data.newOrders[0];
+                        let message = '';
+                        let displayStatus = order.status;
+
+                        if (order.status === 'COOKING') message = `Order #${order.id.slice(-6).toUpperCase()} is now being prepared!`;
+                        if (order.status === 'READY') message = `Order #${order.id.slice(-6).toUpperCase()} is ready for pickup!`;
+                        if (order.status === 'COMPLETED') message = `Order #${order.id.slice(-6).toUpperCase()} is finished. Enjoy your meal!`;
+
+                        if (message) {
+                            setNotification({
+                                id: order.id,
+                                message,
+                                status: order.status
+                            });
+                        }
                     }
                 }
             } catch (error) {
                 console.error("Polling error", error);
             }
-        }, 15000);
+        }, 10000);
 
         return () => clearInterval(interval);
     }, []);
@@ -50,13 +60,24 @@ export default function OrderNotifier() {
 
     if (!notification) return null;
 
+    const getStatusStyles = () => {
+        switch (notification.status) {
+            case 'COOKING': return { bg: 'rgba(59, 130, 246, 0.95)', border: '#3b82f6', title: 'Processing Order' };
+            case 'READY': return { bg: 'rgba(16, 185, 129, 0.95)', border: '#10b981', title: 'Food is Ready!' };
+            case 'COMPLETED': return { bg: 'rgba(139, 92, 246, 0.95)', border: '#8b5cf6', title: 'Order Finished' };
+            default: return { bg: 'rgba(16, 185, 129, 0.95)', border: '#10b981', title: 'Notice' };
+        }
+    };
+
+    const styles = getStatusStyles();
+
     return (
         <div style={{
             position: 'fixed',
             top: '20px',
             right: '20px',
-            background: 'rgba(16, 185, 129, 0.95)',
-            border: '1px solid #10b981',
+            background: styles.bg,
+            border: `1px solid ${styles.border}`,
             backdropFilter: 'blur(10px)',
             color: 'white',
             padding: '1rem 1.5rem',
@@ -68,9 +89,13 @@ export default function OrderNotifier() {
             gap: '1rem',
             animation: 'slideIn 0.3s ease-out'
         }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '24px', height: '24px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            {notification.status === 'COOKING' ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '24px', height: '24px' }}><path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></svg>
+            ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '24px', height: '24px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            )}
             <div>
-                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Food is Ready!</h4>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{styles.title}</h4>
                 <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.9 }}>{notification.message}</p>
             </div>
             <button

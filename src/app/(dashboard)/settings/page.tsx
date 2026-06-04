@@ -7,7 +7,7 @@ export default async function SettingsPage() {
     const session = await auth();
 
     if (!session?.user?.email) {
-        redirect('/login');
+        redirect('/?login=true');
     }
 
     // Fetch the full User object directly from the database

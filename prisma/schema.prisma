@@ -35,6 +35,8 @@ model MenuItem {
   stock             Int      @default(100)
   lowStockThreshold Int      @default(10)
   orderItems        OrderItem[]
+  subscriptions     ItemSubscription[]
+  banners           BannerSettings[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -46,8 +48,10 @@ model Order {
   totalAmount Float
   status      String      @default("PENDING") // 'PENDING' | 'COOKING' | 'READY' | 'COMPLETED' | 'CANCELLED'
   notes       String?
+  paymentId   String?     // Razorpay Payment ID
   rating      Int?        // Phase 7: Order Rating (1-5)
   review      String?     // Phase 7: Order Review
+  isNotified  Boolean     @default(false)
   complaints  Complaint[]
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
@@ -70,7 +74,8 @@ model BannerSettings {
   description String
   price       Float?
   imageUrl    String
-  menuItemId  String?  // Phase 8: Link banner to a specific food item
+  menuItemId  String?
+  menuItem    MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
 }
 
@@ -112,6 +117,7 @@ model ItemSubscription {
   id         String   @id @default(cuid())
   userId     String
   menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
   @@unique([userId, menuItemId])

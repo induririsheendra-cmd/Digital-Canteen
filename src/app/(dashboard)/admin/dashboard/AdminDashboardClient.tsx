@@ -11,12 +11,25 @@ export default function AdminDashboardClient({
 }) {
     const router = useRouter();
     const [orders, setOrders] = useState(initialOrders);
+    const [searchTerm, setSearchTerm] = useState("");
     const [isUpdating, setIsUpdating] = useState(false);
 
     // Filter logic
     const pendingOrders = orders.filter(o => o.status === "PENDING");
     const cookingOrders = orders.filter(o => o.status === "COOKING");
-    const readyOrders = orders.filter(o => o.status === "READY");
+    
+    // Filter ready orders by order ID or username
+    const readyOrders = orders.filter(o => {
+        if (o.status !== "READY") return false;
+        if (!searchTerm) return true;
+        
+        const searchUpper = searchTerm.toUpperCase();
+        const orderIdMatch = o.id.toUpperCase().includes(searchUpper);
+        const usernameMatch = o.user?.username?.toUpperCase().includes(searchUpper);
+        const nameMatch = o.user?.name?.toUpperCase().includes(searchUpper);
+        
+        return orderIdMatch || usernameMatch || nameMatch;
+    });
 
     const handleUpdateStatus = async (orderId: string, newStatus: string) => {
         setIsUpdating(true);
@@ -145,6 +158,26 @@ export default function AdminDashboardClient({
                         <span className={`${styles.columnTitle} ${styles.readyTitle}`}>Ready For Pickup</span>
                         <span className={styles.columnBadge}>{readyOrders.length}</span>
                     </div>
+
+                    <div className={styles.searchWrapper}>
+                        <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                            type="text"
+                            placeholder="Search by ID or Name..."
+                            className={styles.searchInput}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    {readyOrders.length === 0 && searchTerm && (
+                        <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                            No orders matching "{searchTerm}"
+                        </div>
+                    )}
+
                     {readyOrders.map(order =>
                         renderOrderCard(order, "COMPLETED", styles.btnComplete, "Complete Order")
                     )}

@@ -19,18 +19,24 @@ export async function PATCH(
         const body = await req.json();
         const { status } = body;
 
+        const currentOrder = await prisma.order.findUnique({ where: { id } });
+        if (!currentOrder) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
         const updatedOrder = await prisma.order.update({
             where: { id },
-            data: { status }
+            data: { 
+                status,
+                isNotified: status !== currentOrder.status ? false : undefined
+            }
         });
 
-        // Only notify on statuses the user cares about, and prevent duplicates
-        if (status === 'READY' || status === 'COMPLETED') {
-            const message = status === 'READY'
-                ? '🍽 Your order is ready! Please pick it up.'
-                : '✅ Your order has been completed. Leave a review!';
+        // Notifications based on the new status
+        let message = '';
+        if (status === 'COOKING') message = '👨‍🍳 Your order is being prepared! It will be ready soon.';
+        if (status === 'READY') message = '🍽 Your order is ready! Please pick it up.';
+        if (status === 'COMPLETED') message = '✅ Order picked up! Hope you enjoy your meal. Please leave a review!';
 
-            // Check for existing notification with same message for this order
+        if (message) {
             const existing = await prisma.notification.findFirst({
                 where: {
                     userId: updatedOrder.userId,

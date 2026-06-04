@@ -20,9 +20,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) return null
 
-                const user = await prisma.user.findUnique({
-                    where: { username: credentials.username as string }
+                const loginId = credentials.username as string;
+
+                // Try finding by username first, then by email
+                let user = await prisma.user.findUnique({
+                    where: { username: loginId }
                 })
+
+                if (!user) {
+                    user = await prisma.user.findUnique({
+                        where: { email: loginId }
+                    })
+                }
 
                 if (!user || !user.password) return null
 
@@ -77,8 +86,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
     },
     pages: {
-        signIn: '/login',
-        error: '/login',
+        signIn: '/',
+        error: '/',
     },
     session: {
         strategy: 'jwt'

@@ -13,21 +13,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Food Lite",
+  title: "Digital Canteen",
   description: "A fast, beautiful, and efficient canteen ordering platform.",
 };
 
-export default function RootLayout({
+import { Providers } from "@/components/Providers";
+import { auth } from "@/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers session={session}>
+            {children}
+        </Providers>
       </body>
     </html>
   );

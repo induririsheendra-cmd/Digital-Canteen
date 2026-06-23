@@ -531,3 +531,47 @@ input:disabled+.slider {
     color: white;
     box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
+
+.miniBtnSuccess {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #4ade80;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.miniBtnSuccess:hover {
+    background: rgba(16, 185, 129, 0.35);
+}
+
+.miniBtnDanger {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.miniBtnDanger:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.miniBtnDangerActive {
+    background: rgba(239, 68, 68, 0.55);
+    border: 1px solid rgba(239, 68, 68, 0.75);
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}

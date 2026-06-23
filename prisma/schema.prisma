@@ -133,3 +133,12 @@ model ReviewVote {
 
   @@unique([userId, orderId])
 }
+
+model PlateCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique // e.g. "RICE", "CURRY", "STARTER"
+  label     String   // e.g. "🍚 Rice", "🍛 Curry"
+  limit     Int      @default(1)
+  createdAt DateTime @default(now())
+}
+

@@ -2,8 +2,12 @@ import prisma from "@/lib/prisma";
 import PlateClient from "./PlateClient";
 
 export default async function YourPlatePage() {
-    // Fetch only items that are relevant to building a plate
-    const relevantCategories = ["RICE", "BREAD", "CURRY", "SWEET", "BEVERAGE", "EXTRA"];
+    // Fetch dynamic plate categories from the database
+    const categories = await prisma.plateCategory.findMany({
+        orderBy: { createdAt: 'asc' }
+    });
+
+    const relevantCategories = categories.map(cat => cat.name);
 
     const plateItems = await prisma.menuItem.findMany({
         where: {
@@ -13,5 +17,5 @@ export default async function YourPlatePage() {
         orderBy: { name: 'asc' }
     });
 
-    return <PlateClient items={plateItems} />;
+    return <PlateClient items={plateItems} categories={categories} />;
 }

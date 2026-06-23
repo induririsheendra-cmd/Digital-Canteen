@@ -68,6 +68,20 @@ async function main() {
     }
   });
 
+  // 1.7 Dynamic Plate Categories
+  await prisma.plateCategory.deleteMany({});
+  const plateCategories = [
+    { name: 'RICE', label: '🍚 Rice', limit: 2 },
+    { name: 'CURRY', label: '🍛 Curry', limit: 2 },
+    { name: 'BREAD', label: '🫓 Bread', limit: 2 },
+    { name: 'SWEET', label: '🍰 Sweet', limit: 1 },
+    { name: 'BEVERAGE', label: '🥤 Beverage', limit: 1 },
+    { name: 'EXTRA', label: '🍳 Extra', limit: 1 },
+  ];
+  for (const cat of plateCategories) {
+    await prisma.plateCategory.create({ data: cat });
+  }
+
   // 1.8 Phase 8 Meal Timings
   await prisma.mealTiming.deleteMany({});
   const timings = [

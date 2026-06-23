@@ -8,18 +8,10 @@ import styles from "./plate.module.css";
 
 interface PlateClientProps {
     items: MenuItem[];
+    categories: { id: string; name: string; label: string; limit: number }[];
 }
 
-// Constraints according to requirements
-const LIMITS = {
-    RICE: 2, // Includes BREAD
-    CURRY: 2,
-    SWEET: 1,
-    BEVERAGE: 1,
-    EXTRA: 1,
-};
-
-export default function PlateClient({ items }: PlateClientProps) {
+export default function PlateClient({ items, categories = [] }: PlateClientProps) {
     const { addToCart } = useCart();
     const router = useRouter();
 
@@ -68,7 +60,7 @@ export default function PlateClient({ items }: PlateClientProps) {
         const isLimitReached = currentCount >= limit;
 
         return (
-            <div className={styles.section}>
+            <div className={styles.section} key={title}>
                 <div className={styles.sectionHeader}>
                     <h3>{title}</h3>
                     <span className={`${styles.limitBadge} ${isLimitReached ? styles.error : ''}`}>
@@ -127,11 +119,9 @@ export default function PlateClient({ items }: PlateClientProps) {
                 </div>
             </header>
 
-            {renderSection("Main Course (Rice & Breads)", ["RICE", "BREAD"], LIMITS.RICE)}
-            {renderSection("Curries & Gravies", ["CURRY"], LIMITS.CURRY)}
-            {renderSection("Sweets & Desserts", ["SWEET"], LIMITS.SWEET)}
-            {renderSection("Beverages", ["BEVERAGE"], LIMITS.BEVERAGE)}
-            {renderSection("Extras", ["EXTRA"], LIMITS.EXTRA)}
+            {categories.map(cat => (
+                renderSection(cat.label, [cat.name], cat.limit)
+            ))}
 
             {/* Sticky Bottom Estimate Bar */}
             <div className={styles.bottomBar}>

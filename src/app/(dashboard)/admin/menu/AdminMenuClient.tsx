@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./adminMenu.module.css";
 import { MenuItem } from "@prisma/client";
 
@@ -8,9 +8,96 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
     const [items, setItems] = useState<MenuItem[]>(initialItems);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeCategory, setActiveCategory] = useState<string>("BEVERAGES");
+    const [activePlateSection, setActivePlateSection] = useState<string>("ALL");
     const [dietFilter, setDietFilter] = useState<"ALL" | "VEG" | "NON_VEG">("ALL");
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+    
+    // Dynamic Plate Categories State
+    const [plateCategories, setPlateCategories] = useState<{ id: string, name: string, label: string, limit: number }[]>([]);
+    const [isDeleteMode, setIsDeleteMode] = useState(false);
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
+    const [newCategoryData, setNewCategoryData] = useState({ name: "", label: "", limit: "1" });
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/admin/plate-categories');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPlateCategories(data);
+                }
+            } catch (err) {
+                console.error("Failed to load plate categories:", err);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    const isPlateCategory = (cat: string) => plateCategories.some(c => c.name === cat);
+
+    const handleAddCategory = async () => {
+        const { name, label, limit } = newCategoryData;
+        if (!name.trim() || !label.trim()) {
+            showToast("Category Code and Label are required.", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin/plate-categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name.trim().toUpperCase(),
+                    label: label.trim(),
+                    limit: parseInt(limit) || 1
+                })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to create category");
+            }
+
+            const newCat = await res.json();
+            setPlateCategories(prev => [...prev, newCat]);
+            setNewItem(prev => ({ ...prev, category: newCat.name }));
+            setNewCategoryData({ name: "", label: "", limit: "1" });
+            setIsAddingCategory(false);
+            showToast("Plate section added successfully!");
+        } catch (err: any) {
+            console.error(err);
+            showToast(err.message || "Failed to add category", "error");
+        }
+    };
+
+    const handleDeleteCategory = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to delete the plate section "${name}"? Existing items in this section will no longer be visible in the Plate Builder.`)) return;
+
+        try {
+            const res = await fetch(`/api/admin/plate-categories?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to delete category");
+            }
+
+            setPlateCategories(prev => prev.filter(c => c.id !== id));
+            if (newItem.category === name) {
+                setNewItem(prev => ({ ...prev, category: plateCategories[0]?.name || "RICE" }));
+            }
+            // Reset sub-section filter if the deleted section was active
+            if (activePlateSection === name) {
+                setActivePlateSection("ALL");
+            }
+            showToast("Plate section deleted successfully!");
+        } catch (err: any) {
+            console.error(err);
+            showToast(err.message || "Failed to delete category", "error");
+        }
+    };
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
@@ -167,8 +254,6 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
         }
     };
 
-    const plateCats = ["RICE", "BREAD", "CURRY", "SWEET", "PLATE_BEVERAGE", "EXTRA", "BEVERAGE"];
-
     const filteredItems = items.filter(item => {
         // Search filter
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -178,15 +263,17 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
 
         // Category filter
         if (activeCategory === "YOUR_PLATE") {
-            if (!plateCats.includes(item.category)) return false;
+            if (!isPlateCategory(item.category)) return false;
+            // Sub-section filter within Your Plate
+            if (activePlateSection !== "ALL" && item.category !== activePlateSection) return false;
         } else if (activeCategory === "BEVERAGES") {
             if (item.category !== "BEVERAGES" && item.category !== "BEVERAGE") return false;
         } else {
             if (item.category !== activeCategory) return false;
         }
 
-        // Diet filter
-        if (activeCategory !== "BEVERAGES" && dietFilter !== "ALL") {
+        // Diet filter only applies when not in Beverages or Your Plate mode
+        if (activeCategory !== "BEVERAGES" && activeCategory !== "YOUR_PLATE" && dietFilter !== "ALL") {
             if (dietFilter === "VEG" && !item.isVeg) return false;
             if (dietFilter === "NON_VEG" && item.isVeg) return false;
         }
@@ -226,7 +313,10 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                         onClick={() => {
                             let defaultCategory = "BREAKFAST";
                             if (activeCategory === "YOUR_PLATE") {
-                                defaultCategory = "RICE";
+                                // Pre-select the active plate sub-section if one is picked
+                                defaultCategory = activePlateSection !== "ALL" ? activePlateSection : (plateCategories[0]?.name || "RICE");
+                            } else if (activeCategory === "BEVERAGES") {
+                                defaultCategory = "BEVERAGES";
                             } else if (activeCategory) {
                                 defaultCategory = activeCategory;
                             }
@@ -254,15 +344,60 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                     <div
                         key={cat.id}
                         className={`${styles.categoryCard} ${activeCategory === cat.id ? styles.active : ""}`}
-                        onClick={() => setActiveCategory(cat.id)}
+                        onClick={() => {
+                            setActiveCategory(cat.id);
+                            // Reset sub-section filter when switching tabs
+                            setActivePlateSection("ALL");
+                        }}
                     >
                         <h3>{cat.name}</h3>
                     </div>
                 ))}
             </section>
 
-            {/* Dietary Toggle (Hidden for Beverages) */}
-            {activeCategory !== "BEVERAGES" && (
+            {/* When in Your Plate mode: show plate sub-section buttons */}
+            {activeCategory === "YOUR_PLATE" ? (
+                <section className={styles.filterSection}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button
+                            onClick={() => setActivePlateSection("ALL")}
+                            style={{
+                                padding: '0.4rem 1rem',
+                                borderRadius: '999px',
+                                border: activePlateSection === "ALL" ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.15)',
+                                background: activePlateSection === "ALL" ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+                                color: activePlateSection === "ALL" ? 'white' : 'var(--text-secondary)',
+                                fontWeight: '600',
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            All Sections
+                        </button>
+                        {plateCategories.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setActivePlateSection(cat.name)}
+                                style={{
+                                    padding: '0.4rem 1rem',
+                                    borderRadius: '999px',
+                                    border: activePlateSection === cat.name ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.15)',
+                                    background: activePlateSection === cat.name ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+                                    color: activePlateSection === cat.name ? 'white' : 'var(--text-secondary)',
+                                    fontWeight: '600',
+                                    fontSize: '0.82rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                {cat.label}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+            ) : activeCategory !== "BEVERAGES" ? (
+                /* Dietary Toggle (Hidden for Beverages and Your Plate) */
                 <section className={styles.filterSection}>
                     <div className={styles.toggleContainer}>
                         <button
@@ -285,7 +420,7 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                         </button>
                     </div>
                 </section>
-            )}
+            ) : null}
 
             <div className={styles.tableContainer}>
                 <table className={styles.table}>
@@ -343,13 +478,12 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                                             <option value="DINNER" style={{ background: '#0a0a0a' }}>DINNER</option>
                                             <option value="BEVERAGES" style={{ background: '#0a0a0a' }}>BEVERAGES</option>
 
-                                            {/* Support for Your Plate builder categories, though generally you wouldn't assign timing to them */}
-                                            <option value="RICE" style={{ background: '#0a0a0a' }}>PLATE: RICE</option>
-                                            <option value="BREAD" style={{ background: '#0a0a0a' }}>PLATE: BREAD</option>
-                                            <option value="CURRY" style={{ background: '#0a0a0a' }}>PLATE: CURRY</option>
-                                            <option value="SWEET" style={{ background: '#0a0a0a' }}>PLATE: SWEET</option>
-                                            <option value="BEVERAGE" style={{ background: '#0a0a0a' }}>PLATE: BEVERAGE</option>
-                                            <option value="EXTRA" style={{ background: '#0a0a0a' }}>PLATE: EXTRA</option>
+                                            {/* Support for Your Plate builder categories */}
+                                            {plateCategories.map(cat => (
+                                                <option key={cat.id} value={cat.name} style={{ background: '#0a0a0a' }}>
+                                                    PLATE: {cat.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </td>
 
@@ -480,20 +614,22 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                             <div className={styles.formGroup}>
                                 <label>Category</label>
                                 <select
-                                    value={newItem.category}
-                                    onChange={e => setNewItem({ ...newItem, category: e.target.value })}
+                                    value={isPlateCategory(newItem.category) ? "PLATE" : newItem.category}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === "PLATE") {
+                                            setNewItem({ ...newItem, category: "RICE" });
+                                        } else {
+                                            setNewItem({ ...newItem, category: val });
+                                        }
+                                    }}
                                 >
                                     <option value="BREAKFAST">BREAKFAST</option>
                                     <option value="LUNCH">LUNCH</option>
                                     <option value="SNACKS">SNACKS</option>
                                     <option value="DINNER">DINNER</option>
                                     <option value="BEVERAGES">BEVERAGES</option>
-                                    <option value="RICE">PLATE: RICE</option>
-                                    <option value="CURRY">PLATE: CURRY</option>
-                                    <option value="BREAD">PLATE: BREAD</option>
-                                    <option value="SWEET">PLATE: SWEET</option>
-                                    <option value="BEVERAGE">PLATE: BEVERAGE</option>
-                                    <option value="EXTRA">PLATE: EXTRA</option>
+                                    <option value="PLATE">PLATE (Your Plate)</option>
                                 </select>
                             </div>
 
@@ -548,6 +684,155 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                                 </div>
                             </div>
                         </div>
+
+                        {isPlateCategory(newItem.category) && (
+                            <div className={styles.formGroup} style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <label style={{ margin: 0 }}>Plate Section *</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAddingCategory(!isAddingCategory);
+                                                setIsDeleteMode(false);
+                                            }}
+                                            className={styles.miniBtnSuccess}
+                                        >
+                                            {isAddingCategory ? "Cancel" : "+ Add"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsDeleteMode(!isDeleteMode);
+                                                setIsAddingCategory(false);
+                                            }}
+                                            className={isDeleteMode ? styles.miniBtnDangerActive : styles.miniBtnDanger}
+                                        >
+                                            {isDeleteMode ? "Done" : "- Delete"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {isAddingCategory && (
+                                    <div style={{
+                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                        borderRadius: '8px',
+                                        padding: '0.75rem',
+                                        marginBottom: '0.75rem',
+                                        display: 'grid',
+                                        gridTemplateColumns: '1.5fr 1.5fr 1fr auto',
+                                        gap: '0.5rem',
+                                        alignItems: 'end'
+                                    }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Code (e.g. EXTRA)</label>
+                                            <input
+                                                type="text"
+                                                placeholder="EXTRA"
+                                                value={newCategoryData.name}
+                                                onChange={e => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', width: '100%' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Label (e.g. 🍳 Extra)</label>
+                                            <input
+                                                type="text"
+                                                placeholder="🍳 Extra"
+                                                value={newCategoryData.label}
+                                                onChange={e => setNewCategoryData({ ...newCategoryData, label: e.target.value })}
+                                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', width: '100%' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Limit</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={newCategoryData.limit}
+                                                onChange={e => setNewCategoryData({ ...newCategoryData, limit: e.target.value })}
+                                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', width: '100%' }}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddCategory}
+                                            style={{
+                                                background: 'var(--accent-primary)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                padding: '0.4rem 0.8rem',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                fontWeight: '600',
+                                                height: 'fit-content',
+                                                marginBottom: '2px'
+                                            }}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                    {plateCategories.map(sub => {
+                                        const isActive = newItem.category === sub.name;
+                                        return (
+                                            <div key={sub.id} style={{ position: 'relative' }}>
+                                                <button
+                                                    type="button"
+                                                    disabled={isDeleteMode}
+                                                    onClick={() => setNewItem({ ...newItem, category: sub.name })}
+                                                    style={{
+                                                        padding: '0.5rem 0.9rem',
+                                                        borderRadius: '6px',
+                                                        border: isActive ? '1px solid var(--accent-primary)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                        background: isActive ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                                        color: isActive ? 'white' : 'var(--text-secondary)',
+                                                        fontWeight: '600',
+                                                        cursor: isDeleteMode ? 'not-allowed' : 'pointer',
+                                                        transition: 'all 0.2s ease',
+                                                        outline: 'none',
+                                                        fontSize: '0.85rem'
+                                                    }}
+                                                >
+                                                    {sub.label}
+                                                </button>
+                                                {isDeleteMode && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteCategory(sub.id, sub.name)}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: '-8px',
+                                                            right: '-8px',
+                                                            background: '#ef4444',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '50%',
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '10px',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                                                            fontWeight: 'bold',
+                                                            zIndex: 10
+                                                        }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         <div className={styles.formGroup}>
                             <label>Description (Optional) - Add ingredients or info</label>

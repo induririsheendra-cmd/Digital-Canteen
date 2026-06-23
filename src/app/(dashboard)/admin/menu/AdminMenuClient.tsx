@@ -506,13 +506,46 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                                 }}
                             >
                                 <label>Type</label>
-                                <select
-                                    value={newItem.isVeg ? "true" : "false"}
-                                    onChange={e => setNewItem({ ...newItem, isVeg: e.target.value === "true" })}
-                                >
-                                    <option value="true">Veg</option>
-                                    <option value="false">Non-Veg</option>
-                                </select>
+                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewItem({ ...newItem, isVeg: true })}
+                                        style={{
+                                            flex: 1,
+                                            padding: '0.75rem',
+                                            borderRadius: '8px',
+                                            border: newItem.isVeg ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
+                                            background: newItem.isVeg ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                            color: newItem.isVeg ? '#4ade80' : 'var(--text-secondary)',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            textAlign: 'center',
+                                            outline: 'none'
+                                        }}
+                                    >
+                                        🟢 Veg
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewItem({ ...newItem, isVeg: false })}
+                                        style={{
+                                            flex: 1,
+                                            padding: '0.75rem',
+                                            borderRadius: '8px',
+                                            border: !newItem.isVeg ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.1)',
+                                            background: !newItem.isVeg ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                            color: !newItem.isVeg ? '#f87171' : 'var(--text-secondary)',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            textAlign: 'center',
+                                            outline: 'none'
+                                        }}
+                                    >
+                                        🔴 Non-Veg
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

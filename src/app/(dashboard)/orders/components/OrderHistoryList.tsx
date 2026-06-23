@@ -12,7 +12,8 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
 
     // Stats calculation
     const stats = useMemo(() => {
-        const totalAmount = orders.reduce((acc, order) => acc + order.totalAmount, 0);
+        const nonCancelledOrders = orders.filter(o => !['CANCELLED', 'REFUNDED'].includes(o.status));
+        const totalAmount = nonCancelledOrders.reduce((acc, order) => acc + order.totalAmount, 0);
         const activeCount = orders.filter(o => ['PENDING', 'COOKING', 'READY'].includes(o.status)).length;
         return {
             totalOrders: orders.length,
@@ -24,7 +25,7 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
     const filteredOrders = useMemo(() => {
         if (filter === 'ALL') return orders;
         if (filter === 'ACTIVE') return orders.filter(o => ['PENDING', 'COOKING', 'READY'].includes(o.status));
-        return orders.filter(o => o.status === 'COMPLETED');
+        return orders.filter(o => ['COMPLETED', 'CANCELLED', 'REFUNDED'].includes(o.status));
     }, [orders, filter]);
 
     const getStatusColor = (status: string) => {
@@ -33,7 +34,30 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
             case "COOKING": return styles.statusCooking;
             case "READY": return styles.statusReady;
             case "COMPLETED": return styles.statusCompleted;
+            case "CANCELLED": return styles.statusCancelled;
+            case "REFUNDED": return styles.statusRefunded;
             default: return styles.statusDefault;
+        }
+    };
+
+    const handleCancelOrder = async (orderId: string) => {
+        if (!confirm("Are you sure you want to cancel this order?")) return;
+        try {
+            const res = await fetch(`/api/orders/${orderId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CANCELLED' })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to cancel order");
+            }
+
+            alert("Order cancelled successfully!");
+            window.location.reload();
+        } catch (err: any) {
+            alert(err.message);
         }
     };
 
@@ -49,7 +73,7 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
                 <div className={dashboardStyles.statCard}>
                     <span className={dashboardStyles.statLabel}>Total Spent</span>
                     <span className={dashboardStyles.statValue}>₹{stats.totalSpent.toFixed(0)}</span>
-                    <span className={`${dashboardStyles.statTrending} text-accent`}>Wallet impact</span>
+                    <span className={`${dashboardStyles.statTrending} text-accent`}>Omitted refunds</span>
                 </div>
                 <div className={dashboardStyles.statCard}>
                     <span className={dashboardStyles.statLabel}>Active Orders</span>
@@ -79,7 +103,7 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
                             className={`${styles.tab} ${filter === 'COMPLETED' ? styles.activeTab : ''}`}
                             onClick={() => setFilter('COMPLETED')}
                         >
-                            Completed
+                            Completed & Inactive
                         </button>
                     </div>
                 </div>
@@ -114,8 +138,8 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
                                     {order.orderItems.map((item: any, i: number) => (
                                         <div key={i} className={styles.itemRow}>
                                             <div className={styles.itemImageMini}>
-                                                {item.menuItem.image ? (
-                                                    <img src={item.menuItem.image} alt={item.menuItem.name} />
+                                                {item.menuItem.imageUrl ? (
+                                                    <img src={item.menuItem.imageUrl} alt={item.menuItem.name} />
                                                 ) : (
                                                     <div className={styles.itemPlaceholder}>🍽️</div>
                                                 )}
@@ -128,8 +152,12 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
 
                                 <div className={styles.cardFooter}>
                                     <div className={styles.paymentInfo}>
-                                        <span className={styles.methodLabel}>Total Paid</span>
-                                        <span className={styles.total}>₹{order.totalAmount.toFixed(2)}</span>
+                                        <span className={styles.methodLabel}>
+                                            {['CANCELLED', 'REFUNDED'].includes(order.status) ? 'Total Value' : 'Total Paid'}
+                                        </span>
+                                        <span className={styles.total} style={{ color: order.status === 'REFUNDED' ? '#f472b6' : order.status === 'CANCELLED' ? '#fca5a5' : undefined }}>
+                                            ₹{order.totalAmount.toFixed(2)}
+                                        </span>
                                     </div>
                                     
                                     {order.status === 'COMPLETED' ? (
@@ -138,10 +166,29 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
                                             existingRating={order.rating}
                                             existingReview={order.review}
                                         />
+                                    ) : ['CANCELLED', 'REFUNDED'].includes(order.status) ? (
+                                        <div className={styles.cancelledIndicator}>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px' }}>
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                                            </svg>
+                                            <span>Order Inactive</span>
+                                        </div>
                                     ) : (
-                                        <div className={styles.activeStatusIndicator}>
-                                            <div className={styles.pulseDot}></div>
-                                            <span>Tracking Live</span>
+                                        <div className={styles.activeContainer}>
+                                            <div className={styles.activeStatusIndicator}>
+                                                <div className={styles.pulseDot}></div>
+                                                <span>Tracking Live</span>
+                                            </div>
+                                            {order.status === 'PENDING' && (
+                                                <button
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                    className={styles.cancelBtn}
+                                                >
+                                                    Cancel Order
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>

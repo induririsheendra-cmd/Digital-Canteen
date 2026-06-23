@@ -164,6 +164,12 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.refunded {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f472b6;
+    border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
 .emptyState {
     text-align: center;
     padding: 4rem !important;

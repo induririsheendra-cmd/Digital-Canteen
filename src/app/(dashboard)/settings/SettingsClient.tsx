@@ -2,15 +2,44 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import styles from './settings.module.css';
 import { User } from '@prisma/client';
 
 export default function SettingsClient({ user }: { user: User }) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const handleDeleteAccount = async () => {
+        const confirmDelete = window.confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.");
+        if (!confirmDelete) return;
+
+        const doubleConfirm = window.confirm("Please confirm one last time: delete this account permanently?");
+        if (!doubleConfirm) return;
+
+        setIsDeleting(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'DELETE',
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to delete account');
+            }
+
+            await signOut({ callbackUrl: '/' });
+        } catch (error: any) {
+            setMessage({ type: 'error', text: error.message });
+            setIsDeleting(false);
+        }
+    };
 
     const [formData, setFormData] = useState({
         name: user.name || '',
@@ -70,7 +99,12 @@ export default function SettingsClient({ user }: { user: User }) {
             <form onSubmit={handleSubmit} className={styles.form}>
                 <div className={styles.sectionHeading}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                    Account Info
+                    <span>Account Info</span>
+                    {user.userType === 'FACULTY' ? (
+                        <span className={styles.facultyBadge}>Faculty</span>
+                    ) : (
+                        <span className={styles.studentBadge}>Student</span>
+                    )}
                 </div>
 
                 <div className={styles.row}>
@@ -115,36 +149,38 @@ export default function SettingsClient({ user }: { user: User }) {
 
                 <div className={styles.row}>
                     <div className={styles.inputGroup}>
-                        <label>Roll Number</label>
+                        <label>{user.userType === 'FACULTY' ? 'Faculty ID' : 'Roll Number'}</label>
                         <input
                             type="text"
                             name="rollNumber"
-                            placeholder="e.g. 21BCE0001"
+                            placeholder={user.userType === 'FACULTY' ? 'e.g. FAC12345' : 'e.g. 21BCE0001'}
                             value={formData.rollNumber}
                             onChange={handleChange}
                             className={styles.input}
                         />
                     </div>
 
-                    <div className={styles.inputGroup}>
-                        <label>Semester</label>
-                        <select
-                            name="semester"
-                            value={formData.semester}
-                            onChange={handleChange}
-                            className={styles.input}
-                        >
-                            <option value="">Select Semester</option>
-                            <option value="I">Semester I</option>
-                            <option value="II">Semester II</option>
-                            <option value="III">Semester III</option>
-                            <option value="IV">Semester IV</option>
-                            <option value="V">Semester V</option>
-                            <option value="VI">Semester VI</option>
-                            <option value="VII">Semester VII</option>
-                            <option value="VIII">Semester VIII</option>
-                        </select>
-                    </div>
+                    {user.userType !== 'FACULTY' && (
+                        <div className={styles.inputGroup}>
+                            <label>Semester</label>
+                            <select
+                                name="semester"
+                                value={formData.semester}
+                                onChange={handleChange}
+                                className={styles.input}
+                            >
+                                <option value="">Select Semester</option>
+                                <option value="I">Semester I</option>
+                                <option value="II">Semester II</option>
+                                <option value="III">Semester III</option>
+                                <option value="IV">Semester IV</option>
+                                <option value="V">Semester V</option>
+                                <option value="VI">Semester VI</option>
+                                <option value="VII">Semester VII</option>
+                                <option value="VIII">Semester VIII</option>
+                            </select>
+                        </div>
+                    )}
 
                     <div className={styles.inputGroup}>
                         <label>Department</label>
@@ -247,6 +283,33 @@ export default function SettingsClient({ user }: { user: User }) {
                     {isLoading ? 'Saving...' : 'Save Profile Settings'}
                 </button>
             </form>
+
+            <div className={styles.dangerZone}>
+                <div className={styles.dangerZoneTitle}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px', color: '#f87171' }}>
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span>Danger Zone</span>
+                </div>
+                <div className={styles.dangerZoneContent}>
+                    <div style={{ flexGrow: 1 }}>
+                        <h4 style={{ margin: 0, color: 'white', fontSize: '0.95rem', fontWeight: 600 }}>Delete Account</h4>
+                        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.825rem', lineHeight: '1.4' }}>
+                            Soft-delete your profile. All of your past completed order ledger records will be preserved for admin audits, but you will be signed out and lose access immediately.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleDeleteAccount}
+                        className={styles.deleteBtn}
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

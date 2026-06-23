@@ -119,3 +119,50 @@
 .eyeIcon:hover {
     color: var(--text-primary);
 }
+
+/* Toggle Switch Styles */
+.toggleContainer {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.toggleBtn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.toggleBtnActiveStudent {
+    color: white;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(37, 99, 235, 0.5));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.toggleBtnActiveFaculty {
+    color: white;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.5), rgba(219, 39, 119, 0.5));
+    border: 1px solid rgba(236, 72, 153, 0.3);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+}
+
+.toggleBtn:hover:not(.toggleBtnActiveStudent):not(.toggleBtnActiveFaculty) {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}

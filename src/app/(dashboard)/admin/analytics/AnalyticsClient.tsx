@@ -219,6 +219,7 @@ export default function AnalyticsClient() {
                                     <th>Order ID</th>
                                     <th>Time</th>
                                     <th>Customer</th>
+                                    <th>Type</th>
                                     <th>Items</th>
                                     <th>Value</th>
                                     <th>Status</th>
@@ -227,7 +228,7 @@ export default function AnalyticsClient() {
                             <tbody>
                                 {orders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className={styles.emptyState}>No orders on this date.</td>
+                                        <td colSpan={7} className={styles.emptyState}>No orders on this date.</td>
                                     </tr>
                                 ) : (
                                     orders.map((order: any) => (
@@ -236,7 +237,14 @@ export default function AnalyticsClient() {
                                                 #{order.id.slice(-6).toUpperCase()}
                                             </td>
                                             <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                                            <td style={{ fontSize: '0.85rem' }}>{order.user?.name || order.user?.username || 'N/A'}</td>
+                                            <td style={{ fontSize: '0.85rem' }}>{(order.user?.name || order.user?.username)?.split('_deleted_')[0] || 'N/A'}</td>
+                                            <td>
+                                                {order.user?.userType === 'FACULTY' ? (
+                                                    <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(236,72,153,0.15)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.2)', fontWeight: 700, textTransform: 'uppercase' }}>Faculty</span>
+                                                ) : (
+                                                    <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.2)', fontWeight: 700, textTransform: 'uppercase' }}>Student</span>
+                                                )}
+                                            </td>
                                             <td className={styles.itemList}>
                                                 {order.orderItems.map((item: any, i: number) => (
                                                     <span key={i}>{item.quantity}x {item.menuItem.name}{i < order.orderItems.length - 1 ? ', ' : ''}</span>
@@ -295,40 +303,64 @@ export default function AnalyticsClient() {
                         </div>
 
                         {/* User Details */}
-                        <div style={{
-                            background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
-                            borderRadius: '12px', padding: '1rem', marginBottom: '1rem'
-                        }}>
-                            <h3 style={{ fontSize: '0.8rem', color: '#818cf8', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                👤 Student Details
-                            </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <div>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Name</span>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
-                                        {selectedOrder.user.name || selectedOrder.user.username || 'N/A'}
-                                    </p>
+                        {(() => {
+                            const isFaculty = selectedOrder.user?.userType === 'FACULTY';
+                            return (
+                                <div style={{
+                                    background: isFaculty ? 'rgba(236, 72, 153, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                    border: isFaculty ? '1px solid rgba(236, 72, 153, 0.2)' : '1px solid rgba(99, 102, 241, 0.2)',
+                                    borderRadius: '12px', padding: '1rem', marginBottom: '1rem'
+                                }}>
+                                    <h3 style={{ fontSize: '0.8rem', color: isFaculty ? '#f472b6' : '#818cf8', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        👤 {isFaculty ? 'Faculty Details' : 'Student Details'}
+                                    </h3>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        <div>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Name</span>
+                                            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
+                                                {(selectedOrder.user?.name || selectedOrder.user?.username)?.split('_deleted_')[0] || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{isFaculty ? 'Faculty ID' : 'Roll Number'}</span>
+                                            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
+                                                {selectedOrder.user?.rollNumber || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Department</span>
+                                            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
+                                                {selectedOrder.user?.department || 'N/A'}
+                                            </p>
+                                        </div>
+                                        {!isFaculty && (
+                                            <div>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Semester</span>
+                                                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
+                                                    {selectedOrder.user?.semester || 'N/A'}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {selectedOrder.user?.isDeleted && (
+                                            <div style={{
+                                                gridColumn: 'span 2',
+                                                marginTop: '0.5rem',
+                                                padding: '0.4rem 0.6rem',
+                                                background: 'rgba(239, 68, 68, 0.08)',
+                                                border: '1px solid rgba(239, 68, 68, 0.18)',
+                                                borderRadius: '6px',
+                                                color: '#f87171',
+                                                fontSize: '0.8rem',
+                                                fontWeight: 600,
+                                                textAlign: 'center'
+                                            }}>
+                                                ⚠️ Account Deleted
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Roll Number</span>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
-                                        {selectedOrder.user.rollNumber || 'N/A'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Department</span>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
-                                        {selectedOrder.user.department || 'N/A'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Semester</span>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'white' }}>
-                                        {selectedOrder.user.semester || 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         {/* Order Info */}
                         <div style={{
@@ -384,7 +416,7 @@ export default function AnalyticsClient() {
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Transaction ID</span>
                                 {selectedOrder.paymentId ? (
                                     <span style={{
-                                        color: '#38bdf8', fontSize: '0.8rem', fontWeight: 600,
+                                        color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600,
                                         fontFamily: 'monospace', background: 'rgba(56, 189, 248, 0.1)',
                                         padding: '0.2rem 0.5rem', borderRadius: '6px',
                                         maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
@@ -397,6 +429,14 @@ export default function AnalyticsClient() {
                                     </span>
                                 )}
                             </div>
+                            {selectedOrder.status === 'REFUNDED' && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(56, 189, 248, 0.15)' }}>
+                                    <span style={{ color: '#f472b6', fontSize: '0.85rem', fontWeight: 600 }}>Refund Status</span>
+                                    <span style={{ color: '#f472b6', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                                        Refunded
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Review Section */}

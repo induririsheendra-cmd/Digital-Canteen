@@ -19,12 +19,23 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Username is required' }, { status: 400 });
         }
 
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { userType: true }
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        const isFaculty = user.userType === 'FACULTY';
+
         const updateData: any = {
             username,
             name,
             email,
             rollNumber,
-            semester,
+            semester: isFaculty ? null : semester,
             department
         };
 
@@ -45,6 +56,7 @@ export async function PATCH(request: Request) {
                 rollNumber: true,
                 semester: true,
                 department: true,
+                userType: true,
             }
         });
 
@@ -57,3 +69,45 @@ export async function PATCH(request: Request) {
         );
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const session = await auth();
+        const userId = session?.user?.id;
+
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true, username: true }
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        const timestamp = Date.now();
+        const updatedEmail = user.email ? `${user.email}_deleted_${timestamp}` : null;
+        const updatedUsername = user.username ? `${user.username}_deleted_${timestamp}` : null;
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isDeleted: true,
+                email: updatedEmail,
+                username: updatedUsername
+            }
+        });
+
+        return NextResponse.json({ success: true, message: 'Account deleted successfully.' });
+    } catch (error: any) {
+        console.error('Account deletion error:', error);
+        return NextResponse.json(
+            { error: 'An error occurred while deleting account.' },
+            { status: 500 }
+        );
+    }
+}
+

@@ -8,7 +8,7 @@ async function main() {
 
   // 1. Users
   const studentPassword = await bcrypt.hash('password123', 10);
-  const adminPassword = await bcrypt.hash('1234567890', 10);
+  const adminPassword = await bcrypt.hash('adminpassword123', 10);
   const userAdminPassword = await bcrypt.hash('password123', 10); // Default password for the specific user
 
   // Clear existing items to prevent duplicates and constraint errors
@@ -31,6 +31,7 @@ async function main() {
       email: 'student1@university.edu',
       password: studentPassword,
       role: 'USER',
+      userType: 'STUDENT',
     },
   });
 
@@ -40,6 +41,7 @@ async function main() {
       email: 'admin@university.edu',
       password: adminPassword,
       role: 'ADMIN',
+      userType: 'STUDENT',
     },
   });
 
@@ -49,6 +51,7 @@ async function main() {
       email: 'induririsheendra@gmail.com',
       password: userAdminPassword,
       role: 'ADMIN',
+      userType: 'STUDENT',
     },
   });
 

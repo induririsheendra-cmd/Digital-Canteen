@@ -22,9 +22,8 @@
 
 .statsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    margin-bottom: 3rem;
 }
 
 .statCard {
@@ -91,7 +90,7 @@
 }
 
 .quickActions {
-    margin-top: 2rem;
+    margin-top: 0;
 }
 
 .sectionTitle {
@@ -104,9 +103,9 @@
 }
 
 .actionGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .actionCard {
@@ -157,4 +156,32 @@
 
 .container {
     animation: slideUp 0.5s ease-out;
+}
+
+.mainLayout {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+    .mainLayout {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+    
+    .statsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
 }

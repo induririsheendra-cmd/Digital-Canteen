@@ -34,7 +34,7 @@ export default async function AdminPage() {
                 createdAt: {
                     gte: new Date(new Date().setHours(0, 0, 0, 0))
                 },
-                status: { not: "CANCELLED" }
+                status: { notIn: ["CANCELLED", "REFUNDED"] }
             },
             select: { totalAmount: true }
         })

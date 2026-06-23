@@ -222,7 +222,27 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                             className={styles.searchInput}
                         />
                     </div>
-                    <button onClick={() => setIsAddModalOpen(true)} className={styles.addButton}>
+                    <button
+                        onClick={() => {
+                            let defaultCategory = "BREAKFAST";
+                            if (activeCategory === "YOUR_PLATE") {
+                                defaultCategory = "RICE";
+                            } else if (activeCategory) {
+                                defaultCategory = activeCategory;
+                            }
+                            setNewItem({
+                                name: "",
+                                category: defaultCategory,
+                                isVeg: true,
+                                price: "",
+                                imageUrl: "",
+                                description: ""
+                            });
+                            setEditingItemId(null);
+                            setIsAddModalOpen(true);
+                        }}
+                        className={styles.addButton}
+                    >
                         + Add Item
                     </button>
                 </div>
@@ -477,7 +497,14 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                                 </select>
                             </div>
 
-                            <div className={styles.formGroup}>
+                            <div
+                                className={styles.formGroup}
+                                style={{
+                                    opacity: (newItem.category === "BEVERAGES" || newItem.category === "BEVERAGE") ? 0.3 : 1,
+                                    pointerEvents: (newItem.category === "BEVERAGES" || newItem.category === "BEVERAGE") ? "none" : "auto",
+                                    transition: "opacity 0.3s ease"
+                                }}
+                            >
                                 <label>Type</label>
                                 <select
                                     value={newItem.isVeg ? "true" : "false"}

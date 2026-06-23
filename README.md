@@ -79,12 +79,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
 If you prefer to test via standard login instead of Google OAuth, the database is seeded with two default accounts:
 
 **Standard User:**
-* **Username:** `test_user`
+* **Username:** `student1`
 * **Password:** `password123`
 
 **Admin User (Full Access):**
-* **Username:** `test_admin`
-* **Password:** `password123`
+* **Username:** `admin1`
+* **Password:** `adminpassword123`
 
 ---
 

@@ -5,10 +5,13 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { name, username, email, password, rollNumber, semester, department } = body;
+        const { name, username, email, password, rollNumber, semester, department, userType } = body;
 
         // Validation
-        if (!name || !username || !email || !password || !rollNumber || !semester || !department) {
+        const isFaculty = userType === "FACULTY";
+        const hasMissingFields = !name || !username || !email || !password || !rollNumber || !department || (!isFaculty && !semester);
+
+        if (hasMissingFields) {
             return NextResponse.json({ error: "All fields are mandatory. Please fill in all details." }, { status: 400 });
         }
 
@@ -43,8 +46,9 @@ export async function POST(req: Request) {
                 email: email || null,
                 password: hashedPassword,
                 role: "USER",
+                userType: userType || "STUDENT",
                 rollNumber: rollNumber || null,
-                semester: semester || null,
+                semester: isFaculty ? null : (semester || null),
                 department: department || null,
             },
         });

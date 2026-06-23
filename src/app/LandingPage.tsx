@@ -10,11 +10,45 @@ function LandingPageContent() {
     const searchParams = useSearchParams();
     const [showLogin, setShowLogin] = useState(false);
 
+    const [activeSection, setActiveSection] = useState("hero");
+
     useEffect(() => {
         if (searchParams.get('login') === 'true') {
             setShowLogin(true);
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const sections = ["hero", "features", "howItWorks", "contact"];
+            
+            // If the user reaches the bottom of the page, activate the last section
+            const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100;
+            if (isBottom) {
+                setActiveSection("contact");
+                return;
+            }
+
+            let currentSection = "hero";
+            for (const sectionId of sections) {
+                const el = document.getElementById(sectionId);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    // If the section covers the navbar area (150px from top)
+                    if (rect.top <= 150 && rect.bottom >= 150) {
+                        currentSection = sectionId;
+                        break;
+                    }
+                }
+            }
+            setActiveSection(currentSection);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        handleScroll();
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [searchParams]);
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
@@ -30,10 +64,10 @@ function LandingPageContent() {
             <nav className={styles.navbar}>
                 <div className={styles.navLogo}>🍽 Digital Canteen</div>
                 <ul className={styles.navLinks}>
-                    <li className={styles.navLink} onClick={() => scrollTo("hero")}>Home</li>
-                    <li className={styles.navLink} onClick={() => scrollTo("features")}>Menu</li>
-                    <li className={styles.navLink} onClick={() => scrollTo("howItWorks")}>How it Works</li>
-                    <li className={styles.navLink} onClick={() => scrollTo("contact")}>Contact</li>
+                    <li className={`${styles.navLink} ${activeSection === 'hero' ? styles.activeLink : ''}`} onClick={() => scrollTo("hero")}>Home</li>
+                    <li className={`${styles.navLink} ${activeSection === 'features' ? styles.activeLink : ''}`} onClick={() => scrollTo("features")}>About</li>
+                    <li className={`${styles.navLink} ${activeSection === 'howItWorks' ? styles.activeLink : ''}`} onClick={() => scrollTo("howItWorks")}>How it Works</li>
+                    <li className={`${styles.navLink} ${activeSection === 'contact' ? styles.activeLink : ''}`} onClick={() => scrollTo("contact")}>Contact</li>
                     <li>
                         <button className={styles.navLoginBtn} onClick={() => setShowLogin(true)}>
                             Login
@@ -197,7 +231,7 @@ function LandingPageContent() {
 
                 <div className={styles.footerLinks}>
                     <span className={styles.footerLink} onClick={() => scrollTo("hero")}>Home</span>
-                    <span className={styles.footerLink} onClick={() => scrollTo("features")}>Features</span>
+                    <span className={styles.footerLink} onClick={() => scrollTo("features")}>About</span>
                     <span className={styles.footerLink} onClick={() => scrollTo("howItWorks")}>How it Works</span>
                     <span className={styles.footerLink} onClick={() => setShowLogin(true)}>Login</span>
                     <span className={styles.footerLink} onClick={() => router.push("/register")}>Register</span>

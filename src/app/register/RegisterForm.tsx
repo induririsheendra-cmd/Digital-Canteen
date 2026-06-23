@@ -20,6 +20,7 @@ export default function RegisterForm() {
         rollNumber: '',
         department: '',
         semester: '',
+        userType: 'STUDENT',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -31,7 +32,10 @@ export default function RegisterForm() {
         setError('');
         setLoading(true);
 
-        if (!formData.name || !formData.username || !formData.email || !formData.password || !formData.confirmPassword || !formData.rollNumber || !formData.department || !formData.semester) {
+        const isFaculty = formData.userType === 'FACULTY';
+        const hasMissingFields = !formData.name || !formData.username || !formData.email || !formData.password || !formData.confirmPassword || !formData.rollNumber || !formData.department || (!isFaculty && !formData.semester);
+
+        if (hasMissingFields) {
             setError('Please fill in all mandatory fields.');
             setLoading(false);
             return;
@@ -60,7 +64,8 @@ export default function RegisterForm() {
                     password: formData.password,
                     rollNumber: formData.rollNumber || null,
                     department: formData.department || null,
-                    semester: formData.semester || null,
+                    semester: isFaculty ? null : (formData.semester || null),
+                    userType: formData.userType,
                 }),
             });
 
@@ -91,6 +96,31 @@ export default function RegisterForm() {
                 {error && <div className={styles.errorBanner}>{error}</div>}
 
                 <form onSubmit={handleSubmit} className={styles.form}>
+                    {/* User Type Toggle */}
+                    <div className={styles.toggleContainer}>
+                        <button
+                            type="button"
+                            className={`${styles.toggleBtn} ${formData.userType === 'STUDENT' ? styles.toggleBtnActiveStudent : ''}`}
+                            onClick={() => setFormData({ ...formData, userType: 'STUDENT' })}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '17px', height: '17px' }}>
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Student
+                        </button>
+                        <button
+                            type="button"
+                            className={`${styles.toggleBtn} ${formData.userType === 'FACULTY' ? styles.toggleBtnActiveFaculty : ''}`}
+                            onClick={() => setFormData({ ...formData, userType: 'FACULTY' })}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '17px', height: '17px' }}>
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+                            </svg>
+                            Faculty
+                        </button>
+                    </div>
 
                     {/* Full Name */}
                     <div className={styles.inputGroup}>
@@ -192,15 +222,17 @@ export default function RegisterForm() {
                         <span>Profile Details</span>
                     </div>
 
-                    {/* Roll Number */}
+                    {/* Roll Number / Faculty ID */}
                     <div className={styles.inputGroup}>
-                        <label htmlFor="rollNumber">Roll Number <span style={{ color: '#ef4444' }}>*</span></label>
+                        <label htmlFor="rollNumber">
+                            {formData.userType === 'FACULTY' ? 'Faculty ID' : 'Roll Number'} <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
                         <input
                             id="rollNumber"
                             name="rollNumber"
                             type="text"
                             className="glass-input"
-                            placeholder="e.g., 22B01A0567"
+                            placeholder={formData.userType === 'FACULTY' ? 'e.g., FAC12345' : 'e.g., 22B01A0567'}
                             value={formData.rollNumber}
                             onChange={handleChange}
                             required
@@ -234,23 +266,25 @@ export default function RegisterForm() {
                     </div>
 
                     {/* Semester */}
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="semester">Semester <span style={{ color: '#ef4444' }}>*</span></label>
-                        <select
-                            id="semester"
-                            name="semester"
-                            className="glass-input"
-                            value={formData.semester}
-                            onChange={handleChange}
-                            style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                            required
-                        >
-                            <option value="" style={{ background: '#0f172a' }}>-- Select Semester --</option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                                <option key={sem} value={String(sem)} style={{ background: '#0f172a' }}>Semester {sem}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {formData.userType !== 'FACULTY' && (
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="semester">Semester <span style={{ color: '#ef4444' }}>*</span></label>
+                            <select
+                                id="semester"
+                                name="semester"
+                                className="glass-input"
+                                value={formData.semester}
+                                onChange={handleChange}
+                                style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                required
+                            >
+                                <option value="" style={{ background: '#0f172a' }}>-- Select Semester --</option>
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                                    <option key={sem} value={String(sem)} style={{ background: '#0f172a' }}>Semester {sem}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <button
                         type="submit"

@@ -32,7 +32,7 @@ export async function GET(req: Request) {
             },
             include: {
                 user: {
-                    select: { name: true, username: true, rollNumber: true, semester: true, department: true, email: true },
+                    select: { name: true, username: true, rollNumber: true, semester: true, department: true, email: true, userType: true },
                 },
                 orderItems: { include: { menuItem: true } },
             },
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         });
 
         // Calculate metrics
-        const nonCancelled = orders.filter(o => o.status !== "CANCELLED");
+        const nonCancelled = orders.filter(o => o.status !== "CANCELLED" && o.status !== "REFUNDED");
         const dailyRevenue = nonCancelled.reduce((sum, o) => sum + o.totalAmount, 0);
         const totalOrders = orders.length;
 

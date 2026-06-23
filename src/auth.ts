@@ -33,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     })
                 }
 
-                if (!user || !user.password) return null
+                if (!user || user.isDeleted || !user.password) return null
 
                 const isValid = await bcrypt.compare(credentials.password as string, user.password)
                 if (!isValid) return null
@@ -52,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (user) {
                 token.id = user.id
                 token.role = (user as any).role || 'USER'
+                token.userType = (user as any).userType || 'STUDENT'
 
                 // Handle Google OAuth implicit users
                 if (account?.provider === 'google') {
@@ -59,19 +60,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         where: { email: user.email! }
                     })
                     if (dbUser) {
+                        if (dbUser.isDeleted) {
+                            throw new Error("AccountDeleted");
+                        }
                         token.id = dbUser.id
                         token.role = dbUser.role
+                        token.userType = dbUser.userType
                     } else {
+                        let selectedType = "STUDENT";
+                        try {
+                            const { cookies } = require("next/headers");
+                            const cookieStore = cookies();
+                            const typeCookie = cookieStore.get("canteen_reg_usertype");
+                            if (typeCookie && (typeCookie.value === "STUDENT" || typeCookie.value === "FACULTY")) {
+                                selectedType = typeCookie.value;
+                            }
+                        } catch (cookieErr) {
+                            console.error("Failed to read userType cookie in NextAuth jwt callback:", cookieErr);
+                        }
+
                         // Create Google User if doesn't exist
                         const newDbUser = await prisma.user.create({
                             data: {
                                 email: user.email,
                                 username: user.email?.split('@')[0], // rudimentary username
                                 role: 'USER',
+                                userType: selectedType,
                             }
                         })
                         token.id = newDbUser.id
                         token.role = newDbUser.role
+                        token.userType = newDbUser.userType
                     }
                 }
             }
@@ -81,6 +100,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (session.user) {
                 session.user.id = token.id as string
                 (session.user as any).role = token.role as string
+                (session.user as any).userType = token.userType as string
             }
             return session
         }

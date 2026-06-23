@@ -68,14 +68,36 @@ export default function AdminDashboardClient({
             {/* Phase 6 User Profile Details */}
             {order.user && (
                 <div style={{ marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                        {order.user.username}
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                        <span>{order.user.username?.split('_deleted_')[0]}</span>
+                        {order.user.userType === 'FACULTY' ? (
+                            <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(236,72,153,0.15)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.2)', fontWeight: 700, textTransform: 'uppercase' }}>Faculty</span>
+                        ) : (
+                            <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.2)', fontWeight: 700, textTransform: 'uppercase' }}>Student</span>
+                        )}
                     </div>
-                    {(order.user.rollNumber || order.user.department || order.user.semester) && (
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
-                            {order.user.rollNumber && <span>{order.user.rollNumber}</span>}
+                    {order.user.isDeleted && (
+                        <div style={{
+                            marginTop: '0.4rem',
+                            padding: '0.3rem 0.5rem',
+                            background: 'rgba(239, 68, 68, 0.08)',
+                            border: '1px solid rgba(239, 68, 68, 0.18)',
+                            borderRadius: '6px',
+                            color: '#f87171',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            textAlign: 'center'
+                        }}>
+                            ⚠️ Account Deleted
+                        </div>
+                    )}
+                    {(order.user.rollNumber || order.user.department || (order.user.userType !== 'FACULTY' && order.user.semester)) && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                            {order.user.rollNumber && (
+                                <span>{order.user.userType === 'FACULTY' ? 'ID: ' : 'Roll: '}{order.user.rollNumber}</span>
+                            )}
                             {order.user.department && <span style={{ color: 'var(--primary)' }}>{order.user.department}</span>}
-                            {order.user.semester && <span>Sem {order.user.semester}</span>}
+                            {order.user.userType !== 'FACULTY' && order.user.semester && <span>Sem {order.user.semester}</span>}
                         </div>
                     )}
                 </div>
@@ -110,15 +132,39 @@ export default function AdminDashboardClient({
                 <span>₹{order.totalAmount.toFixed(2)}</span>
             </div>
 
-            {nextStatus && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                {nextStatus && (
+                    <button
+                        className={`${styles.actionBtn} ${btnStyle}`}
+                        onClick={() => handleUpdateStatus(order.id, nextStatus)}
+                        disabled={isUpdating}
+                        style={{ flex: 1, padding: '0.65rem 0.5rem', fontSize: '0.85rem' }}
+                    >
+                        {actionText}
+                    </button>
+                )}
                 <button
-                    className={`${styles.actionBtn} ${btnStyle}`}
-                    onClick={() => handleUpdateStatus(order.id, nextStatus)}
+                    className={styles.actionBtn}
+                    onClick={() => {
+                        const confirmMsg = `Are you sure you want to cancel this order?${order.paymentId ? ' (This will trigger a refund)' : ''}`;
+                        if (confirm(confirmMsg)) {
+                            handleUpdateStatus(order.id, 'CANCELLED');
+                        }
+                    }}
                     disabled={isUpdating}
+                    style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#fca5a5',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        flex: nextStatus ? '0 0 auto' : '1',
+                        width: nextStatus ? 'auto' : '100%',
+                        padding: '0.65rem 1rem',
+                        fontSize: '0.85rem'
+                    }}
                 >
-                    {actionText}
+                    Cancel
                 </button>
-            )}
+            </div>
         </div>
     );
 

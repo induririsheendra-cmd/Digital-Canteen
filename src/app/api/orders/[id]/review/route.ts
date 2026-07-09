@@ -55,3 +55,43 @@ export async function PATCH(
         );
     }
 }
+
+// User deletes their own review
+export async function DELETE(
+    _request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const session = await auth();
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const existingOrder = await prisma.order.findUnique({ where: { id } });
+
+        if (!existingOrder) {
+            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+        }
+
+        // Only the owner (or admin) can delete their review
+        if (existingOrder.userId !== session.user.id && (session.user as any).role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        await prisma.order.update({
+            where: { id },
+            data: { rating: null, review: null },
+        });
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error('Delete review error:', error);
+        return NextResponse.json(
+            { error: 'An error occurred while deleting your review.' },
+            { status: 500 }
+        );
+    }
+}

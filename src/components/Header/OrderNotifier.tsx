@@ -2,54 +2,39 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUserSync } from '@/context/UserSyncContext';
 
 export default function OrderNotifier() {
     const [notification, setNotification] = useState<{ id: string, message: string, status: string } | null>(null);
     const router = useRouter();
+    const { newOrders, dismissOrderNotification } = useUserSync();
 
     useEffect(() => {
-        // Poll every 10 seconds for newly updated, unnotified orders
-        const interval = setInterval(async () => {
-            try {
-                const res = await fetch('/api/orders/polling');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.newOrders && data.newOrders.length > 0) {
-                        const order = data.newOrders[0];
-                        let message = '';
-                        let displayStatus = order.status;
+        if (newOrders && newOrders.length > 0) {
+            const order = newOrders[0];
+            let message = '';
 
-                        if (order.status === 'COOKING') message = `Order #${order.id.slice(-6).toUpperCase()} is now being prepared!`;
-                        if (order.status === 'READY') message = `Order #${order.id.slice(-6).toUpperCase()} is ready for pickup!`;
-                        if (order.status === 'COMPLETED') message = `Order #${order.id.slice(-6).toUpperCase()} is finished. Enjoy your meal!`;
+            if (order.status === 'COOKING') message = `Order #${order.id.slice(-6).toUpperCase()} is now being prepared!`;
+            if (order.status === 'READY') message = `Order #${order.id.slice(-6).toUpperCase()} is ready for pickup!`;
+            if (order.status === 'COMPLETED') message = `Order #${order.id.slice(-6).toUpperCase()} is finished. Enjoy your meal!`;
 
-                        if (message) {
-                            setNotification({
-                                id: order.id,
-                                message,
-                                status: order.status
-                            });
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error("Polling error", error);
+            if (message) {
+                setNotification({
+                    id: order.id,
+                    message,
+                    status: order.status
+                });
             }
-        }, 10000);
-
-        return () => clearInterval(interval);
-    }, []);
+        } else {
+            setNotification(null);
+        }
+    }, [newOrders]);
 
     const dismissNotification = async () => {
         if (!notification) return;
 
         try {
-            // Acknowledge so it doesn't pop up again
-            await fetch('/api/orders/polling', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: notification.id })
-            });
+            await dismissOrderNotification(notification.id);
         } catch (error) {
             console.error(error);
         }

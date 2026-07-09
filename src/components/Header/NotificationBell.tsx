@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useUserSync } from '@/context/UserSyncContext';
 
 export default function NotificationBell() {
     const pathname = usePathname();
@@ -10,6 +11,7 @@ export default function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const { notifications: syncNotifications, unreadCount: syncUnreadCount } = useUserSync();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -23,28 +25,11 @@ export default function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Polling Mechanism
+    // Synchronize sync state
     useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const res = await fetch('/api/notifications');
-                if (res.ok) {
-                    const data = await res.json();
-                    setNotifications(data.notifications || []);
-                    setUnreadCount(data.unreadCount || 0);
-                }
-            } catch (err) {
-                console.error("Silent fail pulling notifications", err);
-            }
-        };
-
-        // Suppress on public/auth routes
-        if (pathname === '/login' || pathname === '/register') return;
-
-        fetchNotifications();
-        const intervalId = setInterval(fetchNotifications, 10000); // Check every 10 seconds
-        return () => clearInterval(intervalId);
-    }, [pathname]);
+        setNotifications(syncNotifications);
+        setUnreadCount(syncUnreadCount);
+    }, [syncNotifications, syncUnreadCount]);
 
     const handleMarkAsRead = async (id: string, currentReadState: boolean) => {
         if (currentReadState) return; // Already read

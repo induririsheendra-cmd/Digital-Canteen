@@ -5,39 +5,26 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useUserSync } from '@/context/UserSyncContext';
 import styles from './sidebar.module.css';
 
 export default function Sidebar() {
     const { data: session, status } = useSession();
     const pathname = usePathname();
     const { cartItems } = useCart();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const { unreadOrdersCount: syncUnreadOrders } = useUserSync();
     const [unreadOrders, setUnreadOrders] = useState(0);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    useEffect(() => {
+        setUnreadOrders(syncUnreadOrders);
+    }, [syncUnreadOrders]);
 
     const isAuthenticated = status === 'authenticated';
 
     useEffect(() => {
         document.documentElement.style.setProperty('--sidebar-width', isCollapsed ? '80px' : '250px');
     }, [isCollapsed]);
-
-    // Poll for new completed orders
-    useEffect(() => {
-        const checkUnreadOrders = async () => {
-            try {
-                const res = await fetch('/api/orders/user/badge');
-                if (res.ok) {
-                    const data = await res.json();
-                    setUnreadOrders(data.count || 0);
-                }
-            } catch (err) {
-                // Silently fail polling
-            }
-        };
-
-        checkUnreadOrders(); // initial fetch
-        const interval = setInterval(checkUnreadOrders, 30000); // Poll every 30s
-        return () => clearInterval(interval);
-    }, []);
 
     // Calculate total items (sum of quantities)
     const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);

@@ -5,6 +5,7 @@ import AdminToastNotifier from '@/components/Header/AdminToastNotifier';
 import NotificationBell from '@/components/Header/NotificationBell';
 import CartBadge from '@/components/Header/CartBadge';
 import { CartProvider } from '@/context/CartContext';
+import { UserSyncProvider } from '@/context/UserSyncContext';
 import styles from './layout.module.css';
 import { auth } from '@/auth';
 
@@ -15,21 +16,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     return (
         <CartProvider>
-            <div className={styles.layout}>
-                {isAdmin ? <AdminSidebar /> : <UserSidebar />}
+            <UserSyncProvider>
+                <div className={styles.layout}>
+                    {isAdmin ? <AdminSidebar /> : <UserSidebar />}
 
-                {/* Global Toast Notifiers */}
-                {!isAdmin && <OrderNotifier />}
-                {isAdmin && <AdminToastNotifier />}
+                    {/* Global Toast Notifiers */}
+                    {!isAdmin && <OrderNotifier />}
+                    {isAdmin && <AdminToastNotifier />}
 
-                <main className={styles.main}>
-                    <div style={{ position: 'absolute', top: '1.5rem', right: '2rem', zIndex: 1000, display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                        {!isAdmin && <CartBadge />}
-                        <NotificationBell />
-                    </div>
-                    {children}
-                </main>
-            </div>
+                    <main className={styles.main}>
+                        <div style={{ position: 'absolute', top: '1.5rem', right: '2rem', zIndex: 1000, display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                            {!isAdmin && <CartBadge />}
+                            <NotificationBell />
+                        </div>
+                        {children}
+                    </main>
+                </div>
+            </UserSyncProvider>
         </CartProvider>
     );
 }

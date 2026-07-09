@@ -10,10 +10,22 @@ export default async function SettingsPage() {
         redirect('/?login=true');
     }
 
-    // Fetch the full User object directly from the database
-    // This allows us to get the live RollNumber, Semester, etc.
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
+        select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            role: true,
+            userType: true,
+            rollNumber: true,
+            semester: true,
+            department: true,
+            isDeleted: true,
+            createdAt: true,
+            updatedAt: true
+        }
     });
 
     if (!user) {
@@ -27,7 +39,7 @@ export default async function SettingsPage() {
                 Manage your academic profile and application preferences.
             </p>
 
-            <SettingsClient user={user} />
+            <SettingsClient user={user as any} />
         </div>
     );
 }

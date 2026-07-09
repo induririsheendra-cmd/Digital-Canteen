@@ -20,7 +20,19 @@ export default async function AdminDashboardPage() {
             }
         },
         include: {
-            user: true, // Phase 6: Inject User Profile
+            user: {
+                select: {
+                    id: true,
+                    username: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    userType: true,
+                    rollNumber: true,
+                    semester: true,
+                    department: true
+                }
+            },
             orderItems: {
                 include: {
                     menuItem: true

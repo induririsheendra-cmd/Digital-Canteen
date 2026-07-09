@@ -10,12 +10,22 @@ export default async function AdminUsersPage() {
         redirect("/home");
     }
 
-    // Fetch users with their orders and items ordered
     const users = await prisma.user.findMany({
         where: {
             role: "USER" // Exclude admin users
         },
-        include: {
+        select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            role: true,
+            userType: true,
+            rollNumber: true,
+            semester: true,
+            department: true,
+            isDeleted: true,
+            createdAt: true,
             orders: {
                 include: {
                     orderItems: {

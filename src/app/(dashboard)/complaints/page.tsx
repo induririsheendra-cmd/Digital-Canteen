@@ -14,24 +14,24 @@ export default async function ComplaintsPage() {
         redirect('/?login=true');
     }
 
-    // Fetch the user's past 10 orders so they can optionally link a complaint to an order ID
-    const recentOrders = await prisma.order.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        select: { id: true, createdAt: true, status: true, totalAmount: true }
-    });
-
-    // Fetch the user's existing complaint history
-    const pastComplaints = await prisma.complaint.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: 'desc' },
-        include: {
-            order: {
-                select: { id: true }
+    // Fetch the user's past 10 orders & existing complaints in parallel
+    const [recentOrders, pastComplaints] = await Promise.all([
+        prisma.order.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+            select: { id: true, createdAt: true, status: true, totalAmount: true }
+        }),
+        prisma.complaint.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                order: {
+                    select: { id: true }
+                }
             }
-        }
-    });
+        })
+    ]);
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>

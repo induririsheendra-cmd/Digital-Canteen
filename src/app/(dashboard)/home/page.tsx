@@ -7,86 +7,69 @@ import styles from './home.module.css';
 
 export default async function HomePage() {
     const session = await auth();
-    let userName = "Student";
+    const userId = session?.user?.id;
 
-    if (session?.user?.id) {
-        const dbUser = await prisma.user.findUnique({
-            where: { id: session.user.id }
-        });
-        if (dbUser) {
-            userName = dbUser.name || dbUser.username || "Student";
-        }
-    }
+    // Parallelized DB queries
+    const [dbUser, menuItems, banners] = await Promise.all([
+        userId ? prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true, username: true }
+        }) : Promise.resolve(null),
+        prisma.menuItem.findMany({
+            where: { available: true },
+            include: {
+                orderItems: {
+                    where: { order: { rating: { not: null } } },
+                    select: { order: { select: { rating: true, review: true } } }
+                }
+            },
+            orderBy: { category: 'asc' }
+        }),
+        prisma.bannerSettings.findMany({
+            take: 3,
+            orderBy: { id: 'asc' },
+            include: { menuItem: true }
+        })
+    ]);
 
-    // Fetch available menu items
-    const menuItems = await prisma.menuItem.findMany({
-        where: { available: true },
-        orderBy: { category: 'asc' }
-    });
+    const userName = dbUser ? (dbUser.name || dbUser.username || "Student") : "Student";
 
-    // Compute average ratings per menu item
-    const allMenuItemIds = menuItems.map(i => i.id);
-    const ratedOrders = await prisma.order.findMany({
-        where: {
-            rating: { not: null },
-            orderItems: { some: { menuItemId: { in: allMenuItemIds } } }
-        },
-        select: {
-            rating: true,
-            review: true,
-            orderItems: { select: { menuItemId: true } }
-        }
-    });
-
-    const ratingMap: Record<string, { total: number; count: number; reviewCount: number }> = {};
-    ratedOrders.forEach(order => {
-        order.orderItems.forEach(oi => {
-            if (!ratingMap[oi.menuItemId]) {
-                ratingMap[oi.menuItemId] = { total: 0, count: 0, reviewCount: 0 };
-            }
-            ratingMap[oi.menuItemId].total += order.rating!;
-            ratingMap[oi.menuItemId].count += 1;
-            if (order.review) ratingMap[oi.menuItemId].reviewCount += 1;
-        });
-    });
-
-    // Enrich items with rating data
+    // Enrich items with average rating and review counts in memory
     const enrichedItems = menuItems.map(item => {
-        const rd = ratingMap[item.id];
+        const ratings = item.orderItems.map(oi => oi.order?.rating).filter((r): r is number => r !== null && r !== undefined);
+        const total = ratings.reduce((sum, r) => sum + r, 0);
+        const count = ratings.length;
+        
+        // Remove nested orderItems to keep the component props lightweight
+        const { orderItems, ...rest } = item;
         return {
-            ...item,
-            avgRating: rd ? Math.round((rd.total / rd.count) * 10) / 10 : 0,
-            reviewCount: rd?.count || 0,
+            ...rest,
+            avgRating: count > 0 ? Math.round((total / count) * 10) / 10 : 0,
+            reviewCount: count,
         };
     });
 
-    // Fetch live CMS Banner Settings (Up to 3 multi-banners)
-    let banners = await prisma.bannerSettings.findMany({
-        take: 3,
-        orderBy: { id: 'asc' }
-    });
-
-    if (banners.length === 0) {
-        banners = [{
-            id: '1',
-            title: 'Welcome to Digital Canteen',
-            description: 'Experience the best meals right to your desk.',
-            price: null,
-            imageUrl: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=2000',
-            menuItemId: null,
-            updatedAt: new Date()
-        }];
-    }
-
-    // Attach linked menu items for all 3 banners if applicable
-    const bannersWithItems = await Promise.all(banners.map(async (banner) => {
-        let linkedItem = null;
-        if (banner.menuItemId) {
-            linkedItem = await prisma.menuItem.findUnique({
-                where: { id: banner.menuItemId }
-            });
-        }
-        return { banner, linkedItem };
+    // Format banners for HomeBannerClient
+    const bannersWithItems = (banners.length > 0 ? banners : [{
+        id: '1',
+        title: 'Welcome to Digital Canteen',
+        description: 'Experience the best meals right to your desk.',
+        price: null,
+        imageUrl: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=2000',
+        menuItemId: null,
+        updatedAt: new Date(),
+        menuItem: null
+    }]).map(banner => ({
+        banner: {
+            id: banner.id,
+            title: banner.title,
+            description: banner.description,
+            price: banner.price,
+            imageUrl: banner.imageUrl,
+            menuItemId: banner.menuItemId,
+            updatedAt: banner.updatedAt
+        },
+        linkedItem: banner.menuItem
     }));
 
     return (

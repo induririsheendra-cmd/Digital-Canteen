@@ -21,49 +21,50 @@ export async function GET(req: Request) {
             dateFilter = { createdAt: { gte: startDate, lte: endDate } };
         }
 
-        const reviews = await prisma.order.findMany({
-            where: {
-                rating: { not: null },
-                ...dateFilter,
-            },
-            select: {
-                id: true,
-                rating: true,
-                review: true,
-                totalAmount: true,
-                createdAt: true,
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        username: true,
-                        email: true,
-                        rollNumber: true,
-                        semester: true,
-                        department: true,
-                    }
-                },
-                orderItems: {
-                    select: {
-                        quantity: true,
-                        menuItem: {
-                            select: { name: true, category: true, isVeg: true }
-                        }
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
-
         // Get dates that have reviews (for calendar dots) — last 90 days
         const ninetyDaysAgo = new Date();
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
         ninetyDaysAgo.setHours(0, 0, 0, 0);
 
-        const allReviewDates = await prisma.order.findMany({
-            where: { rating: { not: null }, createdAt: { gte: ninetyDaysAgo } },
-            select: { createdAt: true },
-        });
+        const [reviews, allReviewDates] = await Promise.all([
+            prisma.order.findMany({
+                where: {
+                    rating: { not: null },
+                    ...dateFilter,
+                },
+                select: {
+                    id: true,
+                    rating: true,
+                    review: true,
+                    totalAmount: true,
+                    createdAt: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            username: true,
+                            email: true,
+                            rollNumber: true,
+                            semester: true,
+                            department: true,
+                        }
+                    },
+                    orderItems: {
+                        select: {
+                            quantity: true,
+                            menuItem: {
+                                select: { name: true, category: true, isVeg: true }
+                            }
+                        }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.order.findMany({
+                where: { rating: { not: null }, createdAt: { gte: ninetyDaysAgo } },
+                select: { createdAt: true },
+            })
+        ]);
 
         const reviewDates = [...new Set(allReviewDates.map(o => {
             const d = new Date(o.createdAt);

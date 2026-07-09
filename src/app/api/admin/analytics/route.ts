@@ -26,18 +26,29 @@ export async function GET(req: Request) {
             endDate.setHours(23, 59, 59, 999);
         }
 
-        const orders = await prisma.order.findMany({
-            where: {
-                createdAt: { gte: startDate, lte: endDate },
-            },
-            include: {
-                user: {
-                    select: { name: true, username: true, rollNumber: true, semester: true, department: true, email: true, userType: true },
+        // Get dates that have orders (for calendar highlights) — last 90 days
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        ninetyDaysAgo.setHours(0, 0, 0, 0);
+
+        const [orders, allRecentOrders] = await Promise.all([
+            prisma.order.findMany({
+                where: {
+                    createdAt: { gte: startDate, lte: endDate },
                 },
-                orderItems: { include: { menuItem: true } },
-            },
-            orderBy: { createdAt: "desc" },
-        });
+                include: {
+                    user: {
+                        select: { name: true, username: true, rollNumber: true, semester: true, department: true, email: true, userType: true },
+                    },
+                    orderItems: { include: { menuItem: true } },
+                },
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.order.findMany({
+                where: { createdAt: { gte: ninetyDaysAgo } },
+                select: { createdAt: true },
+            })
+        ]);
 
         // Calculate metrics
         const nonCancelled = orders.filter(o => o.status !== "CANCELLED" && o.status !== "REFUNDED");
@@ -61,16 +72,6 @@ export async function GET(req: Request) {
                 popularItem = data;
             }
         }
-
-        // Get dates that have orders (for calendar highlights) — last 90 days
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-        ninetyDaysAgo.setHours(0, 0, 0, 0);
-
-        const allRecentOrders = await prisma.order.findMany({
-            where: { createdAt: { gte: ninetyDaysAgo } },
-            select: { createdAt: true },
-        });
 
         const orderDates = [...new Set(allRecentOrders.map(o => {
             const d = new Date(o.createdAt);

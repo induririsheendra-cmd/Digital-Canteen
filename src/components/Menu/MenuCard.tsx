@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState } from "react";
 import { MenuItem } from "@prisma/client";
 import { useCart } from "@/context/CartContext";
@@ -201,7 +203,7 @@ export default function MenuCard({ item }: MenuCardProps) {
                                     </div>
                                     {r.review && (
                                         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.25rem 0', fontStyle: 'italic', lineHeight: 1.4 }}>
-                                            "{r.review}"
+                                             &ldquo;{r.review}&rdquo;
                                         </p>
                                     )}
                                     {/* Like / Dislike */}

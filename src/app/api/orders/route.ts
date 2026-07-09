@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { cartItems, totalAmount, notes } = body;
+        const { cartItems, totalAmount: _totalAmount, notes } = body;
 
         if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });

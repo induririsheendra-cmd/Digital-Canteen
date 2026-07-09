@@ -54,41 +54,43 @@ export async function POST(req: Request) {
         // Create the order, nested orderItems, and update stock in a single transaction
         const { newOrder, lowStockItems } = await prisma.$transaction(async (tx) => {
             const lowStockAlerts: { id: string, name: string, stock: number }[] = [];
+            const itemIds = validItems.map((item: any) => item.menuItem.id);
 
-            // 1. Double check stock for all items
+            // 1. Double check stock for all items in a single query
+            const dbItems = await tx.menuItem.findMany({
+                where: { id: { in: itemIds } },
+                select: { id: true, name: true, stock: true, lowStockThreshold: true }
+            });
+
             for (const item of validItems) {
-                const menuItem = await tx.menuItem.findUnique({
-                    where: { id: item.menuItem.id },
-                    select: { id: true, name: true, stock: true, lowStockThreshold: true }
-                });
-
-                if (!menuItem) {
+                const dbItem = dbItems.find(d => d.id === item.menuItem.id);
+                if (!dbItem) {
                     throw new Error(`Item ${item.menuItem.name} not found.`);
                 }
 
-                if (menuItem.stock < item.quantity) {
-                    throw new Error(`Insufficient stock for ${menuItem.name}. Available: ${menuItem.stock}`);
+                if (dbItem.stock < item.quantity) {
+                    throw new Error(`Insufficient stock for ${dbItem.name}. Available: ${dbItem.stock}`);
                 }
 
                 // Check if this purchase will trigger low stock alert
-                if (menuItem.stock - item.quantity <= menuItem.lowStockThreshold) {
+                if (dbItem.stock - item.quantity <= dbItem.lowStockThreshold) {
                     lowStockAlerts.push({
-                        id: menuItem.id,
-                        name: menuItem.name,
-                        stock: menuItem.stock - item.quantity
+                        id: dbItem.id,
+                        name: dbItem.name,
+                        stock: dbItem.stock - item.quantity
                     });
                 }
             }
 
-            // 2. Decrement stock for each item
-            for (const item of validItems) {
-                await tx.menuItem.update({
+            // 2. Decrement stock for all items concurrently in parallel
+            await Promise.all(validItems.map((item: any) =>
+                tx.menuItem.update({
                     where: { id: item.menuItem.id },
                     data: {
                         stock: { decrement: item.quantity }
                     }
-                });
-            }
+                })
+            ));
 
             // 3. Create the order
             const order = await tx.order.create({

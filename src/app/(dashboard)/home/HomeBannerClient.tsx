@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MenuItem } from '@prisma/client';
 import { useCart } from '@/context/CartContext';
+import Image from 'next/image';
 import styles from './home.module.css';
 
 interface BannerType {
@@ -57,13 +58,26 @@ export default function HomeBannerClient({ bannersData }: HomeBannerClientProps)
         <section
             className={`glass-panel ${styles.heroBanner}`}
             style={{
-                backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 100%), url('${banner.imageUrl}')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                position: 'relative',
+                overflow: 'hidden',
                 transition: 'background-image 0.5s ease-in-out'
             }}
         >
-            <div className={styles.heroContent}>
+            <Image
+                src={banner.imageUrl}
+                alt={banner.title}
+                fill
+                priority={true}
+                sizes="100vw"
+                style={{ objectFit: 'cover', zIndex: 0 }}
+            />
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: 'linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 100%)',
+                zIndex: 1
+            }} />
+            <div className={styles.heroContent} style={{ position: 'relative', zIndex: 2 }}>
                 <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                     {banner.title}
                 </h2>

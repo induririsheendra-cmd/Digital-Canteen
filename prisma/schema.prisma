@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -58,6 +59,10 @@ model Order {
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -68,6 +73,9 @@ model OrderItem {
   menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
   quantity    Int
   priceAtTime Float
+
+  @@index([orderId])
+  @@index([menuItemId])
 }
 
 model BannerSettings {
@@ -103,6 +111,9 @@ model Complaint {
   adminReply String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
 }
 
 model Notification {
@@ -113,6 +124,9 @@ model Notification {
   read      Boolean  @default(false)
   link      String?  // e.g., "/orders" or "/complaints"
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
 }
 
 model ItemSubscription {

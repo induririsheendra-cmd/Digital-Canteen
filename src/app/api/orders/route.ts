@@ -27,7 +27,16 @@ export async function POST(req: Request) {
             if (timing.isManualOpen) return true;
 
             const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
+            // Convert to Indian Standard Time (IST, UTC+5:30)
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Kolkata',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            const formatted = formatter.format(now);
+            const [currentH, currentM] = formatted.split(':').map(Number);
+            const currentTime = currentH * 60 + currentM;
 
             const [startH, startM] = timing.startTime.split(':').map(Number);
             const [endH, endM] = timing.endTime.split(':').map(Number);

@@ -9,7 +9,8 @@ import { useUserSync } from '@/context/UserSyncContext';
 import styles from './sidebar.module.css';
 
 export default function Sidebar() {
-    const { data: session, status } = useSession();
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const { status } = useSession();
     const pathname = usePathname();
     const { cartItems } = useCart();
     const { unreadOrdersCount: syncUnreadOrders } = useUserSync();

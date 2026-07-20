@@ -17,11 +17,35 @@ export default function AdminSidebar() {
     return (
         <aside
             className={`glass-panel ${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}
-            onDoubleClick={() => setIsCollapsed(!isCollapsed)}
         >
-            <div className={styles.logo}>
-                <span className={`text-gradient ${styles.fullLogo}`}>🍽 Digital Canteen</span>
-                <span className={`text-gradient ${styles.collapsedLogo}`}>DC</span>
+            <div className={styles.logo} style={{
+                display: 'flex',
+                justifyContent: isCollapsed ? 'center' : 'space-between',
+                alignItems: 'center',
+                width: '100%',
+                padding: isCollapsed ? '0.5rem 0' : '0.5rem 0 0.5rem 0.5rem'
+            }}>
+                {!isCollapsed && <span className={`text-gradient ${styles.fullLogo}`}>🍽 Digital Canteen</span>}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className={styles.toggleBtn}
+                    title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                    {isCollapsed ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="4" y1="12" x2="20" y2="12" />
+                            <line x1="4" y1="6" x2="20" y2="6" />
+                            <line x1="4" y1="18" x2="20" y2="18" />
+                        </svg>
+                    ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="4" y1="12" x2="14" y2="12" />
+                            <line x1="4" y1="6" x2="20" y2="6" />
+                            <line x1="4" y1="18" x2="20" y2="18" />
+                            <polyline points="9 16 5 12 9 8" />
+                        </svg>
+                    )}
+                </button>
             </div>
 
             <nav className={styles.nav}>

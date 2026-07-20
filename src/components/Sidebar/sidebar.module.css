@@ -27,6 +27,24 @@
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.toggleBtn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .fullLogo {
     transition: opacity 0.25s ease, transform 0.25s ease;
     opacity: 1;

@@ -5,6 +5,7 @@ import styles from "./orderList.module.css";
 import dashboardStyles from "../orders.module.css";
 import OrderReviewForm from "./OrderReviewForm";
 import Image from "next/image";
+import SafeMenuImage from "@/components/Menu/SafeMenuImage";
 
 type OrderStatus = 'ALL' | 'ACTIVE' | 'COMPLETED';
 
@@ -138,12 +139,14 @@ export default function OrderHistoryList({ orders }: { orders: any[] }) {
                                 <div className={styles.itemsList}>
                                     {order.orderItems.map((item: any, i: number) => (
                                         <div key={i} className={styles.itemRow}>
-                                            <div className={styles.itemImageMini} style={{ position: 'relative' }}>
-                                                {item.menuItem.imageUrl ? (
-                                                    <Image src={item.menuItem.imageUrl} alt={item.menuItem.name} fill sizes="40px" style={{ objectFit: 'cover' }} />
-                                                ) : (
-                                                    <div className={styles.itemPlaceholder}>🍽️</div>
-                                                )}
+                                            <div className={styles.itemImageMini} style={{ position: 'relative', overflow: 'hidden', borderRadius: '6px' }}>
+                                                <SafeMenuImage
+                                                    src={item.menuItem.imageUrl}
+                                                    alt={item.menuItem.name}
+                                                    category={item.menuItem.category}
+                                                    name={item.menuItem.name}
+                                                    fill
+                                                />
                                             </div>
                                             <span className={styles.itemName}>{item.quantity}x {item.menuItem.name}</span>
                                             <span className={styles.itemPrice}>₹{item.menuItem.price}</span>

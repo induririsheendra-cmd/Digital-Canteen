@@ -6,6 +6,7 @@ import { useState } from "react";
 import { MenuItem } from "@prisma/client";
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";
+import SafeMenuImage from "./SafeMenuImage";
 import styles from "@/app/(dashboard)/home/home.module.css";
 
 interface MenuCardProps {
@@ -96,13 +97,12 @@ export default function MenuCard({ item }: MenuCardProps) {
     return (
         <div className={`glass-panel ${styles.menuCard}`} style={{ position: 'relative' }}>
             <div className={styles.cardImage} style={{ position: 'relative', overflow: 'hidden' }}>
-                <Image
+                <SafeMenuImage
                     src={item.imageUrl}
                     alt={item.name}
+                    category={item.category}
+                    name={item.name}
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{ objectFit: 'cover' }}
-                    priority={false}
                 />
                 <div className={styles.categoryBadge} style={{ zIndex: 1 }}>
                     {item.category} {item.isVeg ? "(Veg)" : "(Non-Veg)"}

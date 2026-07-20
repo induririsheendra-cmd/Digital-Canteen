@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./adminMenu.module.css";
 import { MenuItem } from "@prisma/client";
+import SafeMenuImage from "@/components/Menu/SafeMenuImage";
 
 export default function AdminMenuClient({ initialItems }: { initialItems: MenuItem[] }) {
     const [items, setItems] = useState<MenuItem[]>(initialItems);
@@ -443,10 +444,15 @@ export default function AdminMenuClient({ initialItems }: { initialItems: MenuIt
                             return (
                                 <tr key={item.id} className={!item.available ? styles.disabledRow : isLowStock ? styles.lowStockRow : ""}>
                                     <td>
-                                        <div
-                                            className={styles.itemImage}
-                                            style={{ backgroundImage: `url(${item.imageUrl})` }}
-                                        />
+                                        <div className={styles.itemImage} style={{ position: 'relative', overflow: 'hidden', borderRadius: '6px' }}>
+                                            <SafeMenuImage
+                                                src={item.imageUrl}
+                                                alt={item.name}
+                                                category={item.category}
+                                                name={item.name}
+                                                fill
+                                            />
+                                        </div>
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>

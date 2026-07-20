@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Script from "next/script";
+import SafeMenuImage from "@/components/Menu/SafeMenuImage";
 
 interface CartClientProps {
     mealTimings?: any[];
@@ -180,10 +181,15 @@ export default function CartClient({ mealTimings = [] }: CartClientProps) {
                 <section className={styles.itemsSection}>
                     {cartItems.map((item) => (
                         <div key={item.id} className={styles.cartItem}>
-                            <div
-                                className={styles.itemImage}
-                                style={{ backgroundImage: `url(${item.menuItem.imageUrl})` }}
-                            />
+                            <div className={styles.itemImage} style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
+                                <SafeMenuImage
+                                    src={item.menuItem.imageUrl}
+                                    alt={item.menuItem.name}
+                                    category={item.menuItem.category}
+                                    name={item.menuItem.name}
+                                    fill
+                                />
+                            </div>
                             <div className={styles.itemInfo}>
                                 <h4 className={styles.itemName}>{item.menuItem.name}</h4>
                                 <p className={styles.itemCategory}>{item.menuItem.category}</p>

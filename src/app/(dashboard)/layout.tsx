@@ -4,6 +4,7 @@ import OrderNotifier from '@/components/Header/OrderNotifier';
 import AdminToastNotifier from '@/components/Header/AdminToastNotifier';
 import NotificationBell from '@/components/Header/NotificationBell';
 import CartBadge from '@/components/Header/CartBadge';
+import SearchBar from '@/components/Header/SearchBar';
 import { CartProvider } from '@/context/CartContext';
 import { UserSyncProvider } from '@/context/UserSyncContext';
 import styles from './layout.module.css';
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
                     <main className={styles.main}>
                         <div style={{ position: 'absolute', top: '1.5rem', right: '2rem', zIndex: 1000, display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                            {!isAdmin && <SearchBar />}
                             {!isAdmin && <CartBadge />}
                             <NotificationBell />
                         </div>

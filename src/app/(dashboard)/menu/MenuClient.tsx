@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MenuItem } from "@prisma/client";
+import { useSearchParams, useRouter } from "next/navigation";
 import MenuCard from "@/components/Menu/MenuCard";
 import styles from "./menu.module.css";
 
@@ -14,6 +15,10 @@ interface MenuClientProps {
 }
 
 export default function MenuClient({ initialItems, userSubscriptions, mealTimings }: MenuClientProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const searchQuery = searchParams.get("search") || "";
+
     const [activeCategory, setActiveCategory] = useState<string>("BREAKFAST");
     const [dietFilter, setDietFilter] = useState<"ALL" | "VEG" | "NON_VEG">("ALL");
     const [sortBy, setSortBy] = useState<string>("DEFAULT");
@@ -44,12 +49,19 @@ export default function MenuClient({ initialItems, userSubscriptions, mealTiming
     const isCurrentCategoryOpen = isCategoryOpen(activeCategory);
 
     const filteredItems = initialItems.filter((item) => {
-        // 1. Filter by category
-        if (item.category !== activeCategory) return false;
-
-        // 2. Filter by dietary preference
+        // 1. Filter by dietary preference
         if (dietFilter === "VEG" && !item.isVeg) return false;
         if (dietFilter === "NON_VEG" && item.isVeg) return false;
+
+        // 2. Filter by search query (global) OR category (default)
+        if (searchQuery) {
+            const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                 item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                 (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            if (!matchesQuery) return false;
+        } else {
+            if (item.category !== activeCategory) return false;
+        }
 
         return true;
     });
@@ -77,6 +89,37 @@ export default function MenuClient({ initialItems, userSubscriptions, mealTiming
                     <p className="text-secondary">Filter by category and dietary preferences.</p>
                 </div>
             </header>
+
+            {searchQuery && (
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '12px',
+                    marginBottom: '1.5rem',
+                    border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                        Showing results for <strong style={{ color: 'var(--primary)' }}>"{searchQuery}"</strong>
+                    </span>
+                    <button
+                        onClick={() => router.push('/menu')}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--primary)',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            padding: 0
+                        }}
+                    >
+                        Clear Search
+                    </button>
+                </div>
+            )}
 
             {/* Category Navigation Cards */}
             <section className={styles.categoryCards}>
@@ -162,7 +205,10 @@ export default function MenuClient({ initialItems, userSubscriptions, mealTiming
                     ))
                 ) : (
                     <div className="text-secondary" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "4rem 0" }}>
-                        {isCurrentCategoryOpen ? "No items found for this category and filter." : ""}
+                        {searchQuery 
+                            ? `No items found matching "${searchQuery}".` 
+                            : (isCurrentCategoryOpen ? "No items found for this category and filter." : "")
+                        }
                     </div>
                 )}
             </section>

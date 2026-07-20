@@ -56,22 +56,25 @@
 }
 
 .saveBtn {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    margin-top: 1.5rem;
+    padding: 0.75rem 2rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     color: white;
     border: none;
     border-radius: 8px;
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     align-self: flex-start;
     min-width: 200px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 .saveBtn:hover:not(:disabled) {
-    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+    filter: brightness(1.1);
 }
 
 .saveBtn:disabled {

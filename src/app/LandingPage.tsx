@@ -53,6 +53,13 @@ function LandingPageContent() {
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [userType, setUserType] = useState<"STUDENT" | "FACULTY">("STUDENT");
+
+    useEffect(() => {
+        if (showLogin) {
+            document.cookie = `canteen_reg_usertype=${userType}; path=/; max-age=3600; SameSite=Lax`;
+        }
+    }, [showLogin, userType]);
 
     const scrollTo = (id: string) => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -253,6 +260,55 @@ function LandingPageContent() {
 
                         <h2 className={styles.modalTitle}>Welcome to Digital Canteen</h2>
                         <p className={styles.modalSub}>Sign in to your account to order food</p>
+
+                        {/* User Type Toggle for New Google/Implicit Sign-ups */}
+                        <div style={{
+                            display: 'flex',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            padding: '4px',
+                            borderRadius: '10px',
+                            marginBottom: '1.5rem',
+                            border: '1px solid rgba(255, 255, 255, 0.08)'
+                        }}>
+                            <button
+                                type="button"
+                                onClick={() => setUserType("STUDENT")}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.6rem',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: userType === "STUDENT" ? 'var(--accent-primary)' : 'transparent',
+                                    color: userType === "STUDENT" ? '#fff' : 'rgba(255, 255, 255, 0.6)',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: userType === "STUDENT" ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none'
+                                }}
+                            >
+                                🎓 Student
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUserType("FACULTY")}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.6rem',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: userType === "FACULTY" ? 'var(--accent-primary)' : 'transparent',
+                                    color: userType === "FACULTY" ? '#fff' : 'rgba(255, 255, 255, 0.6)',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: userType === "FACULTY" ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none'
+                                }}
+                            >
+                                💼 Faculty
+                            </button>
+                        </div>
 
                         <form onSubmit={async (e) => {
                             e.preventDefault();

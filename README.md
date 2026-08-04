@@ -34,7 +34,7 @@ Welcome to the **Digital Canteen**! This is a premium, full-stack web applicatio
 
 * **Frontend:** [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), Vanilla CSS (Custom Glassmorphism Design System)
 * **Backend:** Next.js Server Actions & API Routes
-* **Database:** SQLite managed via [Prisma ORM](https://www.prisma.io/)
+* **Database:** PostgreSQL (Neon Serverless in production, local Docker container for offline development) managed via [Prisma ORM](https://www.prisma.io/)
 * **Authentication:** [NextAuth.js v5](https://next-auth.js.org/) (Google Provider + Credentials Provider)
 * **Payment Processing:** [Razorpay API](https://razorpay.com/)
 
@@ -42,7 +42,7 @@ Welcome to the **Digital Canteen**! This is a premium, full-stack web applicatio
 
 ## 🚀 Getting Started
 
-Follow these steps to run the Digital Canteen locally on your machine.
+Follow these steps to run the Digital Canteen locally on your machine completely offline.
 
 ### 1. Clone the Repository
 ```bash
@@ -55,23 +55,34 @@ cd Digital-Canteen
 npm install
 ```
 
-### 3. Environment Variables
-Create a `.env` file in the root directory and add your Google OAuth credentials, Razorpay credentials, and a standard Auth Secret:
+### 3. Spin up the Local Database (Offline/Docker)
+Ensure you have Docker installed on your system. Run the following command in the project root to start a local PostgreSQL container:
+```bash
+docker compose up -d
+```
+*This starts a local PostgreSQL instance running in the background on your PC at port 5432, meaning you do not connect to Neon for offline testing.*
+
+### 4. Environment Variables
+Create a `.env` file in the root directory by copying `.env.example`, and fill in the local database URL:
 ```env
 NEXTAUTH_URL="http://localhost:3000"
 AUTH_SECRET="your_super_secret_string_here"
 
-# Google Cloud OAuth Credentials
+# Local database connection (matching docker-compose.yml values)
+DATABASE_URL="postgresql://postgres:local_db_password_123@localhost:5432/digital_canteen"
+DIRECT_URL="postgresql://postgres:local_db_password_123@localhost:5432/digital_canteen"
+
+# Google Cloud OAuth Credentials (Optional for local credentials sign in)
 GOOGLE_CLIENT_ID="your_google_client_id"
 GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
-# Razorpay Credentials
+# Razorpay Credentials (Optional for local dashboard testing)
 RAZORPAY_KEY_ID="your_razorpay_key_id"
 RAZORPAY_KEY_SECRET="your_razorpay_key_secret"
 ```
 
-### 4. Database Setup & Seeding
-Push the Prisma schema to your local SQLite database:
+### 5. Database Setup & Migrations
+Sync the Prisma schema to your offline local database:
 ```bash
 npx prisma db push
 ```
